@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EFDC — Assessment</title>
+<link rel="stylesheet" href="shared.css">
+</head><body>
+<nav class="site-nav">
+  <span class="nav-brand">EFDC · SY2024–25</span>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="schools.html">All Schools</a>
+    <a class="nav-link active" href="assessment.html">Assessment</a>
+    <a class="nav-link" href="attendance.html">Attendance</a>
+    <a class="nav-link" href="advanced.html">Adv. Coursework & SAT</a>
+    <a class="nav-link" href="graduation.html">Graduation</a>
+    <a class="nav-link" href="class.html">CLASS</a>
+    <a class="nav-link" href="discipline.html">Discipline</a>
+  </div>
+</nav>
+<div class="page-header">
+  <div class="header-eyebrow">Education Forward DC · Assessment</div>
+  <div class="header-title">Assessment Performance · SY2024–25</div>
+  <div class="header-sub">OSSE growth and proficiency metrics alongside DC CAPE test scores (Meeting/Exceeding and Approaching/Meeting/Exceeding) — ELA and Math</div>
+  <div class="header-stats">
+    <div class="hstat"><span class="hstat-num" id="h-n">—</span><span class="hstat-lbl">Schools shown</span></div>
+    <div class="hstat"><span class="hstat-num">32.5%</span><span class="hstat-lbl">State CAPE M/E ELA</span></div>
+    <div class="hstat"><span class="hstat-num">25.0%</span><span class="hstat-lbl">State CAPE M/E Math</span></div>
+    <div class="hstat"><span class="hstat-num">50.0</span><span class="hstat-lbl">State MGP ELA (target)</span></div>
+  </div>
+</div>
+<div class="main">
+  <div class="context-bar">
+    <strong>Reading this page:</strong> Each card shows two sections — <strong>CAPE scores</strong> (actual % of students meeting/exceeding or approaching/meeting/exceeding DC CAPE standards) and <strong>OSSE growth metrics</strong> (growth to proficiency and median growth percentile, scored as % of points earned). Bars compare each school to the DC statewide average (marker line). A school can have strong proficiency but weak growth, or vice versa — both matter. Click any card to expand full detail.
+  </div>
+  <div class="filters-block">
+    <div class="filter-row">
+      <span class="filter-label">Score tier</span>
+      <button class="pill tier-60p active" data-tier="60+">60+</button>
+      <button class="pill tier-4060 active" data-tier="40-60">40–60</button>
+      <button class="pill tier-2040 active" data-tier="20-40">20–40</button>
+      <button class="pill tier-u20 active" data-tier="<20">Under 20</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Framework</span>
+      <button class="pill fw-all active" data-fw="all">All</button>
+      <button class="pill fw-elem" data-fw="elem">Elementary</button>
+      <button class="pill fw-middle" data-fw="middle">Middle</button>
+      <button class="pill fw-high" data-fw="high">High School</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Type</span>
+      <button class="pill ty-all active" data-ty="all">All</button>
+      <button class="pill ty-dcps" data-ty="DCPS">DCPS</button>
+      <button class="pill ty-charter" data-ty="Charter">Charter</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Ward</span>
+      <button class="pill wd-all active" data-wd="all">All</button>
+      <button class="pill wd-ward" data-wd="1">1</button><button class="pill wd-ward" data-wd="2">2</button>
+      <button class="pill wd-ward" data-wd="3">3</button><button class="pill wd-ward" data-wd="4">4</button>
+      <button class="pill wd-ward" data-wd="5">5</button><button class="pill wd-ward" data-wd="6">6</button>
+      <button class="pill wd-ward" data-wd="7">7</button><button class="pill wd-ward" data-wd="8">8</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">At-risk min</span>
+      <div class="slider-wrap">
+        <input type="range" id="ed-slider" min="0" max="90" step="5" value="0">
+        <span class="slider-val" id="ed-val">0%</span>
+      </div>
+      <span class="slider-note">DC avg: 44.8%</span>
+    </div>
+  </div>
+  <div class="summary-strip" id="summary-strip"></div>
+  <div class="grid" id="school-grid"></div>
+  <div class="legend">
+    <div class="legend-title">Colors</div>
+    <div class="legend-items">
+      <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div>ELA metrics</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E07B20"></div>Math metrics</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#639922"></div>Growth metrics</div>
+      <div class="legend-item" style="gap:8px"><div style="width:2px;height:12px;background:#9B9890;border-radius:1px"></div>State average (marker)</div>
+    </div>
+  </div>
+  <div class="footer">Source: OSSE DC School Report Card SY2024–25 · DC CAPE SY2024–25 · Education Forward DC internal analysis</div>
+</div>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script>
+function renderCard(s){
+  const tk = tierKey(s.tier);
+  const cape = s.cape||{};
+  const asmnt = s.assessment||{};
+
+  // CAPE bars
+  const capeBars = [
+    renderBar('M/E ELA', cape.me_ela?.score, cape.me_ela?.state||32.5, '#378ADD'),
+    renderBar('M/E Math', cape.me_math?.score, cape.me_math?.state||25.0, '#E07B20'),
+    renderBar('AME ELA', cape.ame_ela?.score, cape.ame_ela?.state||52.9, '#378ADD'),
+    renderBar('AME Math', cape.ame_math?.score, cape.ame_math?.state||45.3, '#E07B20'),
+  ].filter(Boolean).join('');
+
+  // Growth bars
+  const growthBars = [
+    renderBar('GtP ELA', asmnt['Growth to Proficiency - ELA']?.score, asmnt['Growth to Proficiency - ELA']?.state||57.0, '#639922'),
+    renderBar('GtP Math', asmnt['Growth to Proficiency - Math']?.score, asmnt['Growth to Proficiency - Math']?.state||48.2, '#639922'),
+    renderBar('MGP ELA', asmnt['Median Growth Percentile - ELA']?.score, asmnt['Median Growth Percentile - ELA']?.state||50.0, '#7F77DD'),
+    renderBar('MGP Math', asmnt['Median Growth Percentile - Math']?.score, asmnt['Median Growth Percentile - Math']?.state||50.3, '#7F77DD'),
+  ].filter(Boolean).join('');
+
+  const hasCape = capeBars.length > 0;
+  const hasGrowth = growthBars.length > 0;
+
+  const detailRows = [
+    renderDetailRow('CAPE Meeting/Exceeding ELA', cape.me_ela?.score, cape.me_ela?.state||32.5),
+    renderDetailRow('CAPE Meeting/Exceeding Math', cape.me_math?.score, cape.me_math?.state||25.0),
+    renderDetailRow('CAPE Appr/Meeting/Exceeding ELA', cape.ame_ela?.score, cape.ame_ela?.state||52.9),
+    renderDetailRow('CAPE Appr/Meeting/Exceeding Math', cape.ame_math?.score, cape.ame_math?.state||45.3),
+    renderDetailRow('Growth to Proficiency — ELA', asmnt['Growth to Proficiency - ELA']?.score, asmnt['Growth to Proficiency - ELA']?.state||57.0),
+    renderDetailRow('Growth to Proficiency — Math', asmnt['Growth to Proficiency - Math']?.score, asmnt['Growth to Proficiency - Math']?.state||48.2),
+    renderDetailRow('Median Growth Percentile — ELA', asmnt['Median Growth Percentile - ELA']?.score, asmnt['Median Growth Percentile - ELA']?.state||50.0),
+    renderDetailRow('Median Growth Percentile — Math', asmnt['Median Growth Percentile - Math']?.score, asmnt['Median Growth Percentile - Math']?.state||50.3),
+  ].filter(Boolean).join('');
+
+  return `<div class="card" onclick="this.classList.toggle('expanded')">
+    <div class="card-top">
+      <div class="score-badge score-${tk}">${s.score.toFixed(1)}</div>
+      <div style="flex:1;min-width:0"><div class="card-name">${s.name}</div><div class="card-sub">${renderSchoolSub(s)}</div></div>
+    </div>
+    ${hasCape?`<div class="metric-section-label">CAPE Proficiency</div><div class="cat-bars">${capeBars}</div>`:''}
+    ${hasGrowth?`<div class="metric-section-label">OSSE Growth Metrics</div><div class="cat-bars">${growthBars}</div>`:''}
+    ${!hasCape&&!hasGrowth?'<span style="font-size:11px;color:var(--text-tertiary)">No assessment data available</span>':''}
+    <div class="detail">
+      <div class="detail-note">CAPE % = share of students meeting/exceeding DC CAPE standards · OSSE metrics = % of points earned in accountability framework · Marker = state avg</div>
+      ${detailRows||'<span style="font-size:12px;color:var(--text-tertiary)">No detail available</span>'}
+    </div>
+  </div>`;
+}
+
+function render(filterFn){
+  const schools = SCHOOLS.filter(filterFn).sort((a,b)=>b.score-a.score);
+  document.getElementById('school-grid').innerHTML = schools.length
+    ? schools.map(renderCard).join('')
+    : '<div class="no-results">No schools match the current filters.</div>';
+  document.getElementById('h-n').textContent = schools.length;
+  renderSummaryStrip(schools);
+}
+
+const baseFilter = makeFilters({onRender: render});
+render(baseFilter);
+</script>
+</body></html>

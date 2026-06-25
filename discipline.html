@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EFDC — Discipline</title><link rel="stylesheet" href="shared.css"></head><body>
+<nav class="site-nav"><span class="nav-brand">EFDC · SY2024–25</span><div class="nav-links">
+  <a class="nav-link" href="index.html">Home</a><a class="nav-link" href="schools.html">All Schools</a>
+  <a class="nav-link" href="assessment.html">Assessment</a><a class="nav-link" href="attendance.html">Attendance</a>
+  <a class="nav-link" href="advanced.html">Adv. Coursework & SAT</a><a class="nav-link" href="graduation.html">Graduation</a>
+  <a class="nav-link" href="class.html">CLASS</a><a class="nav-link active" href="discipline.html">Discipline</a>
+</div></nav>
+<div class="page-header">
+  <div class="header-eyebrow">Education Forward DC · Discipline</div>
+  <div class="header-title">Discipline & School Climate · SY2024–25</div>
+  <div class="header-sub">Suspension, expulsion, harassment, violence, and arrest rates — all rates expressed per 100 students; lower is better</div>
+  <div class="header-stats">
+    <div class="hstat"><span class="hstat-num" id="h-n">—</span><span class="hstat-lbl">Schools shown</span></div>
+    <div class="hstat"><span class="hstat-num">Lower</span><span class="hstat-lbl">is better for all metrics</span></div>
+  </div>
+</div>
+<div class="main">
+  <div class="context-bar"><strong>Reading this page:</strong> All discipline metrics are rates per 100 students — <strong>lower is better</strong>. Bars and gap labels are inverted so that a green gap (positive) means the school has a <em>lower</em> rate than the state average (a good outcome). Hover over a bar label to see the full metric name. Note: discipline data is not part of the OSSE accountability score but is an important context for school climate.</div>
+  <div class="filters-block">
+    <div class="filter-row"><span class="filter-label">Score tier</span>
+      <button class="pill tier-60p active" data-tier="60+">60+</button><button class="pill tier-4060 active" data-tier="40-60">40–60</button>
+      <button class="pill tier-2040 active" data-tier="20-40">20–40</button><button class="pill tier-u20 active" data-tier="<20">Under 20</button>
+    </div>
+    <div class="filter-row"><span class="filter-label">Framework</span>
+      <button class="pill fw-all active" data-fw="all">All</button><button class="pill fw-elem" data-fw="elem">Elementary</button>
+      <button class="pill fw-middle" data-fw="middle">Middle</button><button class="pill fw-high" data-fw="high">High School</button>
+    </div>
+    <div class="filter-row"><span class="filter-label">Type</span>
+      <button class="pill ty-all active" data-ty="all">All</button><button class="pill ty-dcps" data-ty="DCPS">DCPS</button><button class="pill ty-charter" data-ty="Charter">Charter</button>
+    </div>
+    <div class="filter-row"><span class="filter-label">Ward</span>
+      <button class="pill wd-all active" data-wd="all">All</button>
+      <button class="pill wd-ward" data-wd="1">1</button><button class="pill wd-ward" data-wd="2">2</button>
+      <button class="pill wd-ward" data-wd="3">3</button><button class="pill wd-ward" data-wd="4">4</button>
+      <button class="pill wd-ward" data-wd="5">5</button><button class="pill wd-ward" data-wd="6">6</button>
+      <button class="pill wd-ward" data-wd="7">7</button><button class="pill wd-ward" data-wd="8">8</button>
+    </div>
+    <div class="filter-row"><span class="filter-label">At-risk min</span>
+      <div class="slider-wrap"><input type="range" id="ed-slider" min="0" max="90" step="5" value="0"><span class="slider-val" id="ed-val">0%</span></div>
+      <span class="slider-note">DC avg: 44.8%</span>
+    </div>
+  </div>
+  <div class="summary-strip" id="summary-strip"></div>
+  <div class="grid" id="school-grid"></div>
+  <div class="legend"><div class="legend-title">Guide — all rates are per 100 students, lower is better</div><div class="legend-items">
+    <div class="legend-item"><div class="legend-dot" style="background:#D85A30"></div>Suspension rates</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8A1F1F"></div>Expulsions & arrests</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#EF9F27"></div>Harassment & bullying</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7A3210"></div>Violence incidents</div>
+    <div class="legend-item" style="gap:8px"><div style="width:2px;height:12px;background:#9B9890;border-radius:1px"></div>State average (marker) · Green gap = better than state</div>
+  </div></div>
+  <div class="footer">Source: OSSE DC School Report Card SY2024–25 · Education Forward DC internal analysis</div>
+</div>
+<script src="data.js"></script><script src="shared.js"></script>
+<script>
+// For discipline, lower = better, so we invert gap logic for display
+function gapClassInverted(g){
+  if(g==null) return '';
+  if(g<=5) return 'gap-pos';   // lower than state = good
+  if(g<=15) return 'gap-mild';
+  return 'gap-strong';
+}
+function renderBarInverted(label,score,state,color){
+  if(score==null) return '';
+  const sw=Math.min(100,Math.max(0,score)).toFixed(1);
+  const stw=Math.min(100,Math.max(0,state)).toFixed(1);
+  const gap=score-state; // negative = better
+  const gStr=gap>=0?`+${gap.toFixed(0)}`:gap.toFixed(0);
+  const shortLabel=label.replace('Out-of-school Suspension Rate','OSS Rate').replace('In-school Suspensions Rate','ISS Rate').replace('Incidents of Violence Rate','Violence Rate').replace('School-Arrests Rate','Arrests').replace('Harassment Rate','Harassment').replace('Bullying Rate','Bullying').replace('Expulsions Rate','Expulsions');
+  return `<div class="cat-row">
+    <span class="cat-label" title="${label}">${shortLabel}</span>
+    <div class="bar-container">
+      <div class="bar-state" style="width:${stw}%;background:${color}"></div>
+      <div class="bar-school" style="width:${sw}%;background:${color}"></div>
+      <div class="bar-marker" style="left:${stw}%"></div>
+    </div>
+    <span class="gap-label ${gapClassInverted(gap)}">${gStr}</span>
+  </div>`;
+}
+function renderDetailRowInverted(label,score,state){
+  if(score==null) return '';
+  const gap=score-state;
+  const gStr=gap>=0?`+${gap.toFixed(1)}`:gap.toFixed(1);
+  return `<div class="detail-row">
+    <span class="detail-cat">${label}</span>
+    <div class="detail-vals"><span>${score.toFixed(1)}</span><span class="detail-state">vs ${state.toFixed(1)} state</span><span class="${gapClassInverted(gap)}">${gStr}</span></div>
+  </div>`;
+}
+function renderCard(s){
+  const tk=tierKey(s.tier);
+  const m=s.discipline||{};
+  const bars=[
+    renderBarInverted('Out-of-school Suspension Rate',m['Out-of-school Suspension Rate']?.score,m['Out-of-school Suspension Rate']?.state||0,'#D85A30'),
+    renderBarInverted('In-school Suspensions Rate',m['In-school Suspensions Rate']?.score,m['In-school Suspensions Rate']?.state||0,'#D85A30'),
+    renderBarInverted('Expulsions Rate',m['Expulsions Rate']?.score,m['Expulsions Rate']?.state||0,'#8A1F1F'),
+    renderBarInverted('Harassment Rate',m['Harassment Rate']?.score,m['Harassment Rate']?.state||0,'#EF9F27'),
+    renderBarInverted('Bullying Rate',m['Bullying Rate']?.score,m['Bullying Rate']?.state||0,'#EF9F27'),
+    renderBarInverted('Incidents of Violence Rate',m['Incidents of Violence Rate']?.score,m['Incidents of Violence Rate']?.state||0,'#7A3210'),
+    renderBarInverted('School-Arrests Rate',m['School-Arrests Rate']?.score,m['School-Arrests Rate']?.state||0,'#8A1F1F'),
+  ].filter(Boolean).join('');
+  const detail=Object.entries(m).map(([k,v])=>renderDetailRowInverted(k,v?.score,v?.state||0)).filter(Boolean).join('');
+  if(!bars) return '';
+  return `<div class="card" onclick="this.classList.toggle('expanded')">
+    <div class="card-top"><div class="score-badge score-${tk}">${s.score.toFixed(1)}</div>
+    <div style="flex:1;min-width:0"><div class="card-name">${s.name}</div><div class="card-sub">${renderSchoolSub(s)}</div></div></div>
+    <div class="cat-bars">${bars}</div>
+    <div class="detail"><div class="detail-note">All rates per 100 students. Lower is better — green gap = school rate below state average. Marker = state avg.</div>${detail}</div>
+  </div>`;
+}
+function render(filterFn){
+  const schools=SCHOOLS.filter(filterFn).filter(s=>s.discipline&&Object.values(s.discipline).some(v=>v.score!=null)).sort((a,b)=>b.score-a.score);
+  document.getElementById('school-grid').innerHTML=schools.length?schools.map(renderCard).filter(Boolean).join(''):'<div class="no-results">No schools match the current filters.</div>';
+  document.getElementById('h-n').textContent=schools.length;
+  renderSummaryStrip(schools);
+}
+const baseFilter=makeFilters({onRender:render});
+render(baseFilter);
+</script></body></html>

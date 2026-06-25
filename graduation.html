@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EFDC — Graduation</title><link rel="stylesheet" href="shared.css"></head><body>
+<nav class="site-nav"><span class="nav-brand">EFDC · SY2024–25</span><div class="nav-links">
+  <a class="nav-link" href="index.html">Home</a><a class="nav-link" href="schools.html">All Schools</a>
+  <a class="nav-link" href="assessment.html">Assessment</a><a class="nav-link" href="attendance.html">Attendance</a>
+  <a class="nav-link" href="advanced.html">Adv. Coursework & SAT</a><a class="nav-link active" href="graduation.html">Graduation</a>
+  <a class="nav-link" href="class.html">CLASS</a><a class="nav-link" href="discipline.html">Discipline</a>
+</div></nav>
+<div class="page-header">
+  <div class="header-eyebrow">Education Forward DC · Graduation</div>
+  <div class="header-title">Graduation & College Enrollment · SY2024–25</div>
+  <div class="header-sub">Four-year and five-year graduation rates for high school framework schools vs DC state averages</div>
+  <div class="header-stats">
+    <div class="hstat"><span class="hstat-num" id="h-n">—</span><span class="hstat-lbl">Schools shown</span></div>
+    <div class="hstat"><span class="hstat-num">62.8</span><span class="hstat-lbl">State avg (% points earned)</span></div>
+  </div>
+</div>
+<div class="main">
+  <div class="context-bar"><strong>Reading this page:</strong> Graduation metrics are scored as % of accountability points earned within the high school framework. Most schools without high school frameworks will show no data. The five-year rate captures students who needed an additional year — a positive gap vs. the four-year rate can indicate a school is successfully re-engaging students.</div>
+  <div class="filters-block">
+    <div class="filter-row"><span class="filter-label">Score tier</span>
+      <button class="pill tier-60p active" data-tier="60+">60+</button><button class="pill tier-4060 active" data-tier="40-60">40–60</button>
+      <button class="pill tier-2040 active" data-tier="20-40">20–40</button><button class="pill tier-u20 active" data-tier="<20">Under 20</button>
+    </div>
+    <div class="filter-row"><span class="filter-label">Type</span>
+      <button class="pill ty-all active" data-ty="all">All</button><button class="pill ty-dcps" data-ty="DCPS">DCPS</button><button class="pill ty-charter" data-ty="Charter">Charter</button>
+    </div>
+    <div class="filter-row"><span class="filter-label">Ward</span>
+      <button class="pill wd-all active" data-wd="all">All</button>
+      <button class="pill wd-ward" data-wd="1">1</button><button class="pill wd-ward" data-wd="2">2</button>
+      <button class="pill wd-ward" data-wd="3">3</button><button class="pill wd-ward" data-wd="4">4</button>
+      <button class="pill wd-ward" data-wd="5">5</button><button class="pill wd-ward" data-wd="6">6</button>
+      <button class="pill wd-ward" data-wd="7">7</button><button class="pill wd-ward" data-wd="8">8</button>
+    </div>
+    <div class="filter-row"><span class="filter-label">At-risk min</span>
+      <div class="slider-wrap"><input type="range" id="ed-slider" min="0" max="90" step="5" value="0"><span class="slider-val" id="ed-val">0%</span></div>
+      <span class="slider-note">DC avg: 44.8%</span>
+    </div>
+  </div>
+  <div class="summary-strip" id="summary-strip"></div>
+  <div class="grid" id="school-grid"></div>
+  <div class="legend"><div class="legend-title">Guide</div><div class="legend-items">
+    <div class="legend-item"><div class="legend-dot" style="background:#D85A30"></div>4-year graduation rate</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7F77DD"></div>5-year graduation rate</div>
+    <div class="legend-item" style="gap:8px"><div style="width:2px;height:12px;background:#9B9890;border-radius:1px"></div>State average</div>
+  </div></div>
+  <div class="footer">Source: OSSE DC School Report Card SY2024–25 · Education Forward DC internal analysis</div>
+</div>
+<script src="data.js"></script><script src="shared.js"></script>
+<script>
+function renderCard(s){
+  const tk=tierKey(s.tier);
+  const m=s.graduation||{};
+  const bars=[
+    renderBar('4-yr Grad Rate',m['Four-Year Graduation Rate']?.score,m['Four-Year Graduation Rate']?.state||62.8,'#D85A30'),
+    renderBar('5-yr Grad Rate',m['Five-Year Graduation Rate']?.score,m['Five-Year Graduation Rate']?.state||62.8,'#7F77DD'),
+  ].filter(Boolean).join('');
+  const detail=[
+    renderDetailRow('Four-Year Graduation Rate',m['Four-Year Graduation Rate']?.score,m['Four-Year Graduation Rate']?.state||62.8),
+    renderDetailRow('Five-Year Graduation Rate',m['Five-Year Graduation Rate']?.score,m['Five-Year Graduation Rate']?.state||62.8),
+  ].filter(Boolean).join('');
+  if(!bars) return '';
+  return `<div class="card" onclick="this.classList.toggle('expanded')">
+    <div class="card-top"><div class="score-badge score-${tk}">${s.score.toFixed(1)}</div>
+    <div style="flex:1;min-width:0"><div class="card-name">${s.name}</div><div class="card-sub">${renderSchoolSub(s)}</div></div></div>
+    <div class="cat-bars">${bars}</div>
+    <div class="detail"><div class="detail-note">% of accountability points earned in the high school graduation framework. Marker = state avg.</div>${detail}</div>
+  </div>`;
+}
+function render(filterFn){
+  const schools=SCHOOLS.filter(filterFn).filter(s=>s.graduation&&Object.values(s.graduation).some(v=>v.score!=null)).sort((a,b)=>b.score-a.score);
+  document.getElementById('school-grid').innerHTML=schools.length?schools.map(renderCard).filter(Boolean).join(''):'<div class="no-results">No schools with graduation data match the current filters.</div>';
+  document.getElementById('h-n').textContent=schools.length;
+  renderSummaryStrip(schools);
+}
+const baseFilter=makeFilters({onRender:render});
+render(baseFilter);
+</script></body></html>

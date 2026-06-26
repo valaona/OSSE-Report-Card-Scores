@@ -151,7 +151,7 @@
   <!-- ── LENS 1 ─────────────────────────────────────────────────────────── -->
   <div id="lens-1">
     <div class="section-note">
-      <strong>Schools outperforming the DC city average for All Students.</strong> Gap = school score minus city average. Positive = above city. Sort any column. Use the subject toggle to focus on ELA, Math, or see both. Schools outperforming on both ELA <em>and</em> Math are highlighted.
+      <strong>Schools outperforming the DC city average for All Students.</strong> Gap = school score minus city average. Positive = above city. Sort any column. <strong>ELA + Math</strong> shows only schools above city on <em>both</em> subjects. Toggle to ELA or Math only to see schools outperforming on a single subject.
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
       <div class="subject-toggle">
@@ -299,11 +299,13 @@ function renderL1(){
   }
 
   // Filter to schools outperforming on the selected subject
+  // "both" requires above city on BOTH ELA and Math
+  // "ela" or "math" only requires above city on that subject
   let filtered = schools.filter(s=>{
     const v = getVals(s);
     if(subj==='ela') return v.gap_ela!=null && v.gap_ela>0;
     if(subj==='math') return v.gap_math!=null && v.gap_math>0;
-    return (v.gap_ela!=null && v.gap_ela>0) || (v.gap_math!=null && v.gap_math>0);
+    return (v.gap_ela!=null && v.gap_ela>0) && (v.gap_math!=null && v.gap_math>0);
   });
 
   // Sort

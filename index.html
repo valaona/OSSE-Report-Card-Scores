@@ -2,16 +2,19 @@
 <title>EFDC School Data — Home</title>
 <link rel="stylesheet" href="shared.css">
 <style>
-.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:20px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:16px}
 .home-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;text-decoration:none;color:inherit;transition:all .15s;display:block}
 .home-card:hover{border-color:var(--accent);box-shadow:0 3px 12px rgba(0,0,0,.08);transform:translateY(-1px)}
+.home-card.featured{border-color:#97C459;background:linear-gradient(135deg,var(--bg-card),#F4FAF0)}
+.home-card.featured:hover{border-color:var(--green)}
 .hc-icon{font-size:22px;margin-bottom:10px}
 .hc-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:5px}
 .hc-desc{font-size:12px;color:var(--text-secondary);line-height:1.55}
 .hc-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;padding:2px 7px;border-radius:3px;margin-top:10px;background:var(--accent-light);color:var(--accent)}
+.hc-tag.green{background:var(--green-light);color:var(--green)}
 .intro{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:4px;font-size:13px;color:var(--text-secondary);line-height:1.7}
 .intro strong{color:var(--text-primary)}
-.section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-tertiary);margin:22px 0 10px}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-tertiary);margin:20px 0 8px}
 </style>
 </head><body>
 <nav class="site-nav">
@@ -20,6 +23,7 @@
     <a class="nav-link active" href="index.html">Home</a>
     <a class="nav-link" href="schools.html">All Schools</a>
     <a class="nav-link" href="assessment.html">Assessment</a>
+    <a class="nav-link" href="equity.html">Equity & Outperformance</a>
     <a class="nav-link" href="attendance.html">Attendance</a>
     <a class="nav-link" href="advanced.html">Adv. Coursework & SAT</a>
     <a class="nav-link" href="graduation.html">Graduation</a>
@@ -30,20 +34,20 @@
 <div class="page-header">
   <div class="header-eyebrow">Education Forward DC · Internal Analysis Tool</div>
   <div class="header-title">DC School Performance Data · SY2024–25</div>
-  <div class="header-sub">Interactive views built from OSSE School Report Card data to support schools and talent investment strategy</div>
+  <div class="header-sub">Interactive views built from OSSE School Report Card and DC CAPE data to support schools and talent investment strategy</div>
   <div class="header-stats">
     <div class="hstat"><span class="hstat-num">200</span><span class="hstat-lbl">Schools in dataset</span></div>
     <div class="hstat"><span class="hstat-num">44.8%</span><span class="hstat-lbl">DC avg at-risk enrollment</span></div>
-    <div class="hstat"><span class="hstat-num">7</span><span class="hstat-lbl">Metric views</span></div>
+    <div class="hstat"><span class="hstat-num">9</span><span class="hstat-lbl">Views available</span></div>
   </div>
 </div>
 <div class="main">
   <div class="intro">
-    This site gives the EFDC team interactive access to SY2024–25 OSSE accountability and metric data across all 200 DC public and charter schools. Each page lets you filter by score tier, school framework, type, ward, and at-risk enrollment concentration — and drill into individual school performance on each metric relative to the DC statewide average.<br><br>
+    This site gives the EFDC team interactive access to SY2024–25 OSSE accountability and metric data across all 200 DC public and charter schools. Each page lets you filter by score tier, school framework, type, ward, and at-risk enrollment concentration.<br><br>
     <strong>Investment strategy context:</strong> Schools scoring 60+ are targets for access expansion. Schools scoring 40–60 serving high ED populations are the primary accelerate-improvement cohort. Schools under 20 are candidates for consolidation review.
   </div>
 
-  <div class="section-label">Explorer views</div>
+  <div class="section-label">Assessment views</div>
   <div class="home-grid">
     <a class="home-card" href="schools.html">
       <div class="hc-icon">🏫</div>
@@ -53,14 +57,24 @@
     </a>
     <a class="home-card" href="assessment.html">
       <div class="hc-icon">📊</div>
-      <div class="hc-title">Assessment</div>
-      <div class="hc-desc">OSSE growth and proficiency metrics alongside DC CAPE test scores — ELA and Math, meeting/exceeding and approaching/meeting/exceeding. Growth vs. proficiency comparison.</div>
-      <span class="hc-tag">CAPE · Growth · Proficiency</span>
+      <div class="hc-title">Assessment Deep Dive</div>
+      <div class="hc-desc">Select any school to compare student group performance against the city average and schools in the same framework — OSSE growth metrics and DC CAPE proficiency side by side.</div>
+      <span class="hc-tag">CAPE · OSSE · Student groups</span>
     </a>
+    <a class="home-card featured" href="equity.html">
+      <div class="hc-icon">⚖️</div>
+      <div class="hc-title">Equity & Outperformance</div>
+      <div class="hc-desc">Three lenses: which schools beat the city overall, which outperform for specific student groups, and where the internal gap between economically disadvantaged and all students is largest or smallest.</div>
+      <span class="hc-tag green">CAPE · OSSE · Equity gaps</span>
+    </a>
+  </div>
+
+  <div class="section-label">Metric views</div>
+  <div class="home-grid">
     <a class="home-card" href="attendance.html">
       <div class="hc-icon">📅</div>
       <div class="hc-title">Attendance</div>
-      <div class="hc-desc">Chronic absenteeism rates, attendance growth, and Pre-K chronic absenteeism. Filter to schools most behind the state average.</div>
+      <div class="hc-desc">Chronic absenteeism rates, attendance growth, and Pre-K chronic absenteeism compared to DC state averages.</div>
       <span class="hc-tag">Chronic absenteeism · Growth</span>
     </a>
     <a class="home-card" href="advanced.html">
@@ -78,17 +92,17 @@
     <a class="home-card" href="class.html">
       <div class="hc-icon">👶</div>
       <div class="hc-title">CLASS (Pre-K Quality)</div>
-      <div class="hc-desc">Classroom quality observation scores across Emotional Support, Classroom Organization, and Instructional Support domains. Elementary framework only.</div>
+      <div class="hc-desc">Classroom quality observation scores across Emotional Support, Classroom Organization, and Instructional Support. Elementary framework only.</div>
       <span class="hc-tag">Pre-K · Elementary</span>
     </a>
     <a class="home-card" href="discipline.html">
-      <div class="hc-icon">⚖️</div>
+      <div class="hc-icon">🛡️</div>
       <div class="hc-title">Discipline</div>
-      <div class="hc-desc">Suspension, expulsion, harassment, violence, and school arrest rates. Lower is better — gaps shown as inverted vs. state average.</div>
+      <div class="hc-desc">Suspension, expulsion, harassment, violence, and school arrest rates. Lower is better — gaps shown vs state average.</div>
       <span class="hc-tag">Suspensions · Safety</span>
     </a>
   </div>
 
-  <div class="footer">Source: OSSE DC School Report Card SY2024–25 · FY2025 Enrollment Audit Data · Education Forward DC internal analysis · Not for external distribution</div>
+  <div class="footer">Source: OSSE DC School Report Card SY2024–25 · DC CAPE SY2024–25 · FY2025 Enrollment Audit Data · Education Forward DC internal analysis · Not for external distribution</div>
 </div>
 </body></html>

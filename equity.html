@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EFDC — Assessment Equity & Outperformance</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── Page tabs ─────────────────────────────────────────────────────────── */
+.page-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;overflow-x:auto}
+.page-tab{font-size:13px;font-weight:500;padding:10px 18px;cursor:pointer;border:none;background:none;color:var(--text-secondary);font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .12s}
+.page-tab:hover{color:var(--text-primary)}
+.page-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── Shared table ──────────────────────────────────────────────────────── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{text-align:left;font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);padding:7px 10px;border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;background:var(--bg-card)}
+.data-table th:hover{color:var(--text-primary)}
+.data-table th.sorted{color:var(--accent)}
+.data-table th .sort-arrow{margin-left:4px;opacity:.5}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.data-table tr:hover td{background:var(--bg-secondary)}
+.data-table tbody tr:last-child td{border-bottom:none}
+.tbl-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;overflow-x:auto}
+
+/* ── Value cells ───────────────────────────────────────────────────────── */
+.val-cell{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;white-space:nowrap}
+.chip{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.chip-pos{background:#E6F2DC;color:#2D6A10}
+.chip-neg{background:#FAEAEA;color:#8A1F1F}
+.chip-neu{background:var(--bg-secondary);color:var(--text-secondary)}
+.chip-warn{background:#FDF0D5;color:#7A4A00}
+
+/* ── Inline mini bar ───────────────────────────────────────────────────── */
+.inline-bar-wrap{display:flex;align-items:center;gap:5px;min-width:90px}
+.inline-bar-bg{flex:1;height:7px;background:var(--bg-secondary);border-radius:3px;overflow:hidden}
+.inline-bar-fill{height:100%;border-radius:3px}
+.inline-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;min-width:32px;text-align:right}
+
+/* ── Equity gap bar ─────────────────────────────────────────────────────── */
+.gap-bar-wrap{display:flex;align-items:center;gap:5px}
+.gap-bar-outer{flex:1;height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden;position:relative;min-width:60px}
+.gap-bar-ed{position:absolute;left:0;top:0;height:100%;border-radius:4px}
+.gap-bar-all{position:absolute;left:0;top:0;height:100%;background:transparent;border-right:2px solid var(--text-tertiary)}
+.gap-val{font-family:'IBM Plex Mono',monospace;font-size:11px;min-width:28px;text-align:right}
+.gap-val.small{color:var(--green)}
+.gap-val.medium{color:var(--amber)}
+.gap-val.large{color:var(--red)}
+
+/* ── Subject toggle ─────────────────────────────────────────────────────── */
+.subject-toggle{display:flex;gap:6px;margin-bottom:12px}
+.subj-btn{font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .12s}
+.subj-btn.active{background:var(--accent);color:white;border-color:var(--accent);font-weight:500}
+
+/* ── Group picker (lens 2) ──────────────────────────────────────────────── */
+.group-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.group-btn{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .12s}
+.group-btn.active{font-weight:500;background:var(--accent-light);color:var(--accent);border-color:#85B7EB}
+
+/* ── Source toggle ──────────────────────────────────────────────────────── */
+.source-toggle{display:flex;gap:6px;margin-bottom:12px}
+.src-btn{font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .12s}
+.src-btn.active{background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border-strong);font-weight:500}
+
+/* ── Result count ───────────────────────────────────────────────────────── */
+.result-count{font-size:12px;color:var(--text-tertiary);margin-bottom:8px;font-family:'IBM Plex Mono',monospace}
+
+/* ── Section label ──────────────────────────────────────────────────────── */
+.section-note{font-size:12px;color:var(--text-secondary);margin-bottom:12px;line-height:1.5;padding:10px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)}
+.section-note strong{color:var(--text-primary)}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="nav-brand">EFDC · SY2024–25</span>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="schools.html">All Schools</a>
+    <a class="nav-link" href="assessment.html">Assessment</a>
+    <a class="nav-link active" href="equity.html">Equity & Outperformance</a>
+    <a class="nav-link" href="attendance.html">Attendance</a>
+    <a class="nav-link" href="advanced.html">Adv. Coursework & SAT</a>
+    <a class="nav-link" href="graduation.html">Graduation</a>
+    <a class="nav-link" href="class.html">CLASS</a>
+    <a class="nav-link" href="discipline.html">Discipline</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="header-eyebrow">Education Forward DC · Assessment Equity & Outperformance</div>
+  <div class="header-title">Who's outperforming the city — and for whom? · SY2024–25</div>
+  <div class="header-sub">Three lenses: schools outperforming city averages overall, outperforming for specific student groups, and internal equity gaps between economically disadvantaged and all students</div>
+  <div class="header-stats">
+    <div class="hstat"><span class="hstat-num">200</span><span class="hstat-lbl">Schools</span></div>
+    <div class="hstat"><span class="hstat-num">32.5%</span><span class="hstat-lbl">City CAPE M/E ELA</span></div>
+    <div class="hstat"><span class="hstat-num">25.0%</span><span class="hstat-lbl">City CAPE M/E Math</span></div>
+    <div class="hstat"><span class="hstat-num">57.0</span><span class="hstat-lbl">City OSSE GtP ELA</span></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Shared filters -->
+  <div class="filters-block">
+    <div class="filter-row">
+      <span class="filter-label">Score tier</span>
+      <button class="pill tier-60p active" data-tier="60+">60+</button>
+      <button class="pill tier-4060 active" data-tier="40-60">40–60</button>
+      <button class="pill tier-2040 active" data-tier="20-40">20–40</button>
+      <button class="pill tier-u20 active" data-tier="<20">Under 20</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Framework</span>
+      <button class="pill fw-all active" data-fw="all">All</button>
+      <button class="pill fw-elem" data-fw="elem">Elementary</button>
+      <button class="pill fw-middle" data-fw="middle">Middle</button>
+      <button class="pill fw-high" data-fw="high">High School</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Type</span>
+      <button class="pill ty-all active" data-ty="all">All</button>
+      <button class="pill ty-dcps" data-ty="DCPS">DCPS</button>
+      <button class="pill ty-charter" data-ty="Charter">Charter</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Ward</span>
+      <button class="pill wd-all active" data-wd="all">All</button>
+      <button class="pill wd-ward" data-wd="1">1</button><button class="pill wd-ward" data-wd="2">2</button>
+      <button class="pill wd-ward" data-wd="3">3</button><button class="pill wd-ward" data-wd="4">4</button>
+      <button class="pill wd-ward" data-wd="5">5</button><button class="pill wd-ward" data-wd="6">6</button>
+      <button class="pill wd-ward" data-wd="7">7</button><button class="pill wd-ward" data-wd="8">8</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">At-risk min</span>
+      <div class="slider-wrap">
+        <input type="range" id="ed-slider" min="0" max="90" step="5" value="0">
+        <span class="slider-val" id="ed-val">0%</span>
+      </div>
+      <span class="slider-note">DC avg: 44.8% · Useful for Lens 1 & 2 to focus on high-ED schools that outperform</span>
+    </div>
+  </div>
+
+  <!-- Page tabs -->
+  <div class="page-tabs">
+    <button class="page-tab active" data-lens="1">📊 Lens 1 — Overall outperformance</button>
+    <button class="page-tab" data-lens="2">👥 Lens 2 — Subgroup outperformance</button>
+    <button class="page-tab" data-lens="3">⚖️ Lens 3 — Internal equity gap</button>
+  </div>
+
+  <!-- ── LENS 1 ─────────────────────────────────────────────────────────── -->
+  <div id="lens-1">
+    <div class="section-note">
+      <strong>Schools outperforming the DC city average for All Students.</strong> Gap = school score minus city average. Positive = above city. Sort any column. Use the subject toggle to focus on ELA, Math, or see both. Schools outperforming on both ELA <em>and</em> Math are highlighted.
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <div class="subject-toggle">
+        <button class="subj-btn active" data-subj1="both">ELA + Math</button>
+        <button class="subj-btn" data-subj1="ela">ELA only</button>
+        <button class="subj-btn" data-subj1="math">Math only</button>
+      </div>
+      <div class="source-toggle">
+        <button class="src-btn active" data-src1="cape">CAPE M/E</button>
+        <button class="src-btn" data-src1="osse">OSSE Growth to Prof.</button>
+      </div>
+    </div>
+    <div class="result-count" id="l1-count"></div>
+    <div class="tbl-wrap">
+      <table class="data-table" id="l1-table">
+        <thead id="l1-head"></thead>
+        <tbody id="l1-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── LENS 2 ─────────────────────────────────────────────────────────── -->
+  <div id="lens-2" style="display:none">
+    <div class="section-note">
+      <strong>Schools outperforming the DC city average for a specific student group.</strong> Select a group and subject to rank schools by their gap above the city average for that group. Particularly useful for identifying schools that serve high-need students well even if their overall scores are moderate.
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;margin-bottom:12px">
+      <div>
+        <div style="font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:6px">Student group</div>
+        <div class="group-picker" id="l2-groups"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <div class="subject-toggle">
+        <button class="subj-btn active" data-subj2="ela">ELA</button>
+        <button class="subj-btn" data-subj2="math">Math</button>
+      </div>
+      <div class="source-toggle">
+        <button class="src-btn active" data-src2="cape">CAPE M/E</button>
+        <button class="src-btn" data-src2="osse">OSSE Growth to Prof.</button>
+      </div>
+    </div>
+    <div class="result-count" id="l2-count"></div>
+    <div class="tbl-wrap">
+      <table class="data-table" id="l2-table">
+        <thead id="l2-head"></thead>
+        <tbody id="l2-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── LENS 3 ─────────────────────────────────────────────────────────── -->
+  <div id="lens-3" style="display:none">
+    <div class="section-note">
+      <strong>Internal equity gap: All Students vs Economically Disadvantaged students at the same school.</strong> Gap = All Students score minus ED score. <em>Smaller gap = more equitable.</em> A large gap means ED students are falling behind their peers at the same school. Sort by gap to find schools with the widest disparities — or the smallest. Both CAPE M/E and OSSE Growth to Proficiency shown side by side.
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <div class="subject-toggle">
+        <button class="subj-btn active" data-subj3="ela">ELA</button>
+        <button class="subj-btn" data-subj3="math">Math</button>
+      </div>
+      <div>
+        <span style="font-size:11px;color:var(--text-tertiary)">Sort: </span>
+        <button class="src-btn active" data-sort3="gap_desc">Largest gap first</button>
+        <button class="src-btn" data-sort3="gap_asc">Smallest gap first</button>
+        <button class="src-btn" data-sort3="ed_desc">ED score (highest first)</button>
+      </div>
+    </div>
+    <div class="result-count" id="l3-count"></div>
+    <div class="tbl-wrap">
+      <table class="data-table" id="l3-table">
+        <thead id="l3-head"></thead>
+        <tbody id="l3-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">Source: OSSE DC School Report Card SY2024–25 · DC CAPE SY2024–25 · Education Forward DC internal analysis · Not for external distribution</div>
+</div>
+
+<script src="equity_data.js"></script>
+<script src="shared.js"></script>
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let activeTiers = new Set(['60+','40-60','20-40','<20']);
+let activeFw='all', activeTy='all', activeWd='all', minED=0;
+let activeLens=1;
+let l1Subj='both', l1Src='cape', l1SortCol='gap_ela', l1SortDir=-1;
+let l2Group='Econ. Disadvantaged', l2Subj='ela', l2Src='cape', l2SortDir=-1;
+let l3Subj='ela', l3Sort='gap_desc';
+
+const GROUPS = ['Econ. Disadvantaged','Black/African American','Hispanic/Latino','Students w/ Disabilities','English Learners','White','Asian'];
+const CITY_CAPE = {ela:32.5, math:25.0};
+const CITY_OSSE = {ela:57.0, math:48.2};
+
+function tierKey(t){return t==='<20'?'u20':t==='20-40'?'2040':t==='40-60'?'4060':'60p';}
+
+function baseFilter(s){
+  if(!activeTiers.has(s.tier)) return false;
+  if(activeFw!=='all' && s.fw_key!==activeFw) return false;
+  if(activeTy!=='all' && s.type!==activeTy) return false;
+  if(activeWd!=='all' && s.ward!==parseInt(activeWd)) return false;
+  if(minED>0 && (s.ed_pct==null||s.ed_pct<minED)) return false;
+  return true;
+}
+
+function chipClass(v){ if(v==null) return 'chip-neu'; if(v>5) return 'chip-pos'; if(v>0) return 'chip-warn'; return 'chip-neg'; }
+function chipStr(v){ if(v==null) return '—'; return (v>0?'+':'')+v.toFixed(1); }
+function gapClass3(v){ if(v==null) return ''; if(v<=5) return 'small'; if(v<=15) return 'medium'; return 'large'; }
+
+function typeTag(s){ return s.type==='DCPS'?'<span class="tag tag-dcps">DCPS</span>':'<span class="tag tag-charter">Charter</span>'; }
+function fwTag(s){ const c=s.fw_key==='elem'?'tag-elem':s.fw_key==='middle'?'tag-middle':'tag-high'; return `<span class="tag ${c}">${s.fw}</span>`; }
+function tierBadge(s){ const tk=tierKey(s.tier); return `<span class="tier-badge tb-${tk}">${s.tier}</span>`; }
+
+function inlineBar(val, max, color){
+  if(val==null) return '<span style="color:var(--text-tertiary);font-size:11px">n/a</span>';
+  const pct = Math.min(100,Math.max(0,val/max*100)).toFixed(1);
+  return `<div class="inline-bar-wrap">
+    <div class="inline-bar-bg"><div class="inline-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+    <span class="inline-val" style="color:${color}">${val.toFixed(1)}</span>
+  </div>`;
+}
+
+// ── Sort helper ───────────────────────────────────────────────────────────────
+function makeSortHeader(col, label, currentCol, dir, onSort){
+  const active = col===currentCol;
+  const arrow = active ? (dir===-1?'↓':'↑') : '';
+  return `<th class="${active?'sorted':''}" data-col="${col}">${label}<span class="sort-arrow">${arrow}</span></th>`;
+}
+
+// ── LENS 1 ────────────────────────────────────────────────────────────────────
+function renderL1(){
+  const schools = EQUITY_SCHOOLS.filter(baseFilter);
+  const src = l1Src;
+  const subj = l1Subj;
+
+  function getVals(s){
+    const data = src==='cape' ? s.cape?.['All Students'] : s.osse?.['All Students'];
+    return {
+      ela: data?.ela ?? null,
+      math: data?.math ?? null,
+      gap_ela: data?.gap_ela ?? null,
+      gap_math: data?.gap_math ?? null,
+    };
+  }
+
+  // Filter to schools outperforming on the selected subject
+  let filtered = schools.filter(s=>{
+    const v = getVals(s);
+    if(subj==='ela') return v.gap_ela!=null && v.gap_ela>0;
+    if(subj==='math') return v.gap_math!=null && v.gap_math>0;
+    return (v.gap_ela!=null && v.gap_ela>0) || (v.gap_math!=null && v.gap_math>0);
+  });
+
+  // Sort
+  const sd = l1SortDir;
+  const sc = l1SortCol;
+  filtered.sort((a,b)=>{
+    const av=getVals(a), bv=getVals(b);
+    const aval = av[sc]??-999, bval = bv[sc]??-999;
+    if(sc==='score') return sd*(b.score-a.score);
+    return sd*(bval-aval);
+  });
+
+  document.getElementById('l1-count').textContent = `${filtered.length} schools outperforming city on ${subj==='both'?'ELA or Math':subj.toUpperCase()} (${src==='cape'?'CAPE M/E':'OSSE GtP'})`;
+
+  const bothLabel = subj==='both'?' (both ★)':'';
+  const cityRef = src==='cape'?CITY_CAPE:CITY_OSSE;
+  const color = '#378ADD';
+  const mathColor = '#E07B20';
+
+  document.getElementById('l1-head').innerHTML = `<tr>
+    ${makeSortHeader('name','School',l1SortCol,l1SortDir,null)}
+    <th>Type · FW</th>
+    ${makeSortHeader('score','Acct. Score',l1SortCol,l1SortDir,null)}
+    ${subj!=='math'?makeSortHeader('ela',`ELA (city: ${cityRef.ela})`,l1SortCol,l1SortDir,null):''}
+    ${subj!=='math'?makeSortHeader('gap_ela','ELA gap',l1SortCol,l1SortDir,null):''}
+    ${subj!=='ela'?makeSortHeader('math',`Math (city: ${cityRef.math})`,l1SortCol,l1SortDir,null):''}
+    ${subj!=='ela'?makeSortHeader('gap_math','Math gap',l1SortCol,l1SortDir,null):''}
+    <th>ED %</th>
+  </tr>`;
+
+  document.getElementById('l1-body').innerHTML = filtered.map(s=>{
+    const v = getVals(s);
+    const bothAbove = v.gap_ela>0 && v.gap_math>0;
+    return `<tr style="${bothAbove&&subj==='both'?'background:linear-gradient(90deg,rgba(46,106,16,.04),transparent)':''}">
+      <td><span style="font-weight:600">${s.name}</span>${bothAbove&&subj==='both'?' <span style="color:var(--green);font-size:10px">★ both</span>':''}<br><span style="font-size:10px;color:var(--text-tertiary)">Ward ${s.ward||'—'}</span></td>
+      <td>${typeTag(s)} ${fwTag(s)}</td>
+      <td><span class="tier-badge tb-${tierKey(s.tier)}">${s.score.toFixed(1)}</span></td>
+      ${subj!=='math'?`<td>${inlineBar(v.ela,100,color)}</td><td><span class="chip ${chipClass(v.gap_ela)}">${chipStr(v.gap_ela)}</span></td>`:''}
+      ${subj!=='ela'?`<td>${inlineBar(v.math,100,mathColor)}</td><td><span class="chip ${chipClass(v.gap_math)}">${chipStr(v.gap_math)}</span></td>`:''}
+      <td style="color:var(--text-secondary)">${s.ed_pct!=null?s.ed_pct+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Sort click handlers
+  document.querySelectorAll('#l1-head th[data-col]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      if(l1SortCol===th.dataset.col) l1SortDir*=-1;
+      else{ l1SortCol=th.dataset.col; l1SortDir=-1; }
+      renderL1();
+    });
+  });
+}
+
+// ── LENS 2 ────────────────────────────────────────────────────────────────────
+function renderL2Groups(){
+  document.getElementById('l2-groups').innerHTML = GROUPS.map(g=>
+    `<button class="group-btn${g===l2Group?' active':''}" data-g="${g}">${g}</button>`
+  ).join('');
+  document.querySelectorAll('[data-g]').forEach(btn=>{
+    btn.addEventListener('click',()=>{ l2Group=btn.dataset.g; renderL2Groups(); renderL2(); });
+  });
+}
+
+function renderL2(){
+  const schools = EQUITY_SCHOOLS.filter(baseFilter);
+  const src = l2Src, subj = l2Subj;
+
+  function getVal(s){
+    const data = src==='cape'?s.cape?.[l2Group]:s.osse?.[l2Group];
+    return {
+      score: data?.[subj] ?? null,
+      gap: data?.[`gap_${subj}`] ?? null,
+    };
+  }
+
+  const filtered = schools.filter(s=>getVal(s).gap!=null).sort((a,b)=>{
+    return l2SortDir*(( getVal(b).gap??-999)-(getVal(a).gap??-999));
+  });
+
+  const cityRef = src==='cape'?CITY_CAPE:CITY_OSSE;
+  const cityVal = cityRef[subj];
+  const color = subj==='ela'?'#378ADD':'#E07B20';
+
+  document.getElementById('l2-count').textContent = `${filtered.length} schools with ${l2Group} data · sorted by gap vs city average (${src==='cape'?'CAPE M/E':'OSSE GtP'} ${subj.toUpperCase()}: city avg ${cityVal})`;
+
+  document.getElementById('l2-head').innerHTML = `<tr>
+    <th>School</th>
+    <th>Type · FW</th>
+    <th>Acct. Score</th>
+    <th>${l2Group} — ${subj.toUpperCase()} score (city: ${cityVal})</th>
+    <th>Gap vs city</th>
+    <th>All Students ${subj.toUpperCase()}</th>
+    <th>ED %</th>
+  </tr>`;
+
+  document.getElementById('l2-body').innerHTML = filtered.map(s=>{
+    const v = getVal(s);
+    const allData = src==='cape'?s.cape?.['All Students']:s.osse?.['All Students'];
+    const allScore = allData?.[subj];
+    return `<tr>
+      <td><span style="font-weight:600">${s.name}</span><br><span style="font-size:10px;color:var(--text-tertiary)">Ward ${s.ward||'—'}</span></td>
+      <td>${typeTag(s)} ${fwTag(s)}</td>
+      <td><span class="tier-badge tb-${tierKey(s.tier)}">${s.score.toFixed(1)}</span></td>
+      <td>${inlineBar(v.score,100,color)}</td>
+      <td><span class="chip ${chipClass(v.gap)}">${chipStr(v.gap)}</span></td>
+      <td>${allScore!=null?allScore.toFixed(1):'—'}</td>
+      <td style="color:var(--text-secondary)">${s.ed_pct!=null?s.ed_pct+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── LENS 3 ────────────────────────────────────────────────────────────────────
+function renderL3(){
+  const schools = EQUITY_SCHOOLS.filter(baseFilter);
+  const subj = l3Subj;
+
+  function getVals(s){
+    const eq = s.equity || {};
+    return {
+      cape_all: eq[`cape_${subj}_all`],
+      cape_ed: eq[`cape_${subj}_ed`],
+      cape_gap: eq[`cape_${subj}_gap`],
+      osse_all: eq[`osse_${subj}_all`],
+      osse_ed: eq[`osse_${subj}_ed`],
+      osse_gap: eq[`osse_${subj}_gap`],
+    };
+  }
+
+  const filtered = schools.filter(s=>{ const v=getVals(s); return v.cape_gap!=null||v.osse_gap!=null; });
+
+  filtered.sort((a,b)=>{
+    const av=getVals(a), bv=getVals(b);
+    if(l3Sort==='gap_desc') return ((bv.cape_gap??bv.osse_gap??-99)-(av.cape_gap??av.osse_gap??-99));
+    if(l3Sort==='gap_asc') return ((av.cape_gap??av.osse_gap??99)-(bv.cape_gap??bv.osse_gap??99));
+    if(l3Sort==='ed_desc') return ((bv.cape_ed??bv.osse_ed??-99)-(av.cape_ed??av.osse_ed??-99));
+    return 0;
+  });
+
+  document.getElementById('l3-count').textContent = `${filtered.length} schools with equity gap data — ${subj.toUpperCase()} · smaller gap = more equitable`;
+
+  document.getElementById('l3-head').innerHTML = `<tr>
+    <th>School</th>
+    <th>Type · FW</th>
+    <th>Score</th>
+    <th>CAPE — All</th>
+    <th>CAPE — ED</th>
+    <th>CAPE gap</th>
+    <th>OSSE GtP — All</th>
+    <th>OSSE GtP — ED</th>
+    <th>OSSE gap</th>
+    <th>ED %</th>
+  </tr>`;
+
+  document.getElementById('l3-body').innerHTML = filtered.map(s=>{
+    const v = getVals(s);
+    const capeGapClass = v.cape_gap!=null?gapClass3(v.cape_gap):'';
+    const ossGapClass = v.osse_gap!=null?gapClass3(v.osse_gap):'';
+    return `<tr>
+      <td><span style="font-weight:600">${s.name}</span><br><span style="font-size:10px;color:var(--text-tertiary)">Ward ${s.ward||'—'}</span></td>
+      <td>${typeTag(s)} ${fwTag(s)}</td>
+      <td><span class="tier-badge tb-${tierKey(s.tier)}">${s.score.toFixed(1)}</span></td>
+      <td class="val-cell">${v.cape_all!=null?v.cape_all.toFixed(1):'—'}</td>
+      <td class="val-cell">${v.cape_ed!=null?v.cape_ed.toFixed(1):'—'}</td>
+      <td><span class="chip ${v.cape_gap==null?'chip-neu':v.cape_gap<=5?'chip-pos':v.cape_gap<=15?'chip-warn':'chip-neg'}">${v.cape_gap!=null?'+'+v.cape_gap.toFixed(1):'—'}</span></td>
+      <td class="val-cell">${v.osse_all!=null?v.osse_all.toFixed(1):'—'}</td>
+      <td class="val-cell">${v.osse_ed!=null?v.osse_ed.toFixed(1):'—'}</td>
+      <td><span class="chip ${v.osse_gap==null?'chip-neu':v.osse_gap<=5?'chip-pos':v.osse_gap<=15?'chip-warn':'chip-neg'}">${v.osse_gap!=null?'+'+v.osse_gap.toFixed(1):'—'}</span></td>
+      <td style="color:var(--text-secondary)">${s.ed_pct!=null?s.ed_pct+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Shared filter wiring ──────────────────────────────────────────────────────
+function renderAll(){ if(activeLens===1)renderL1(); else if(activeLens===2)renderL2(); else renderL3(); }
+
+document.querySelectorAll('[data-tier]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const t=btn.dataset.tier;
+    if(activeTiers.has(t)){if(activeTiers.size===1)return;activeTiers.delete(t);btn.classList.remove('active');}
+    else{activeTiers.add(t);btn.classList.add('active');}
+    renderAll();
+  });
+});
+function single(attr,setter){
+  document.querySelectorAll(`[${attr}]`).forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll(`[${attr}]`).forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      setter(btn.dataset[attr.replace('data-','')]);
+      renderAll();
+    });
+  });
+}
+single('data-fw',v=>activeFw=v);
+single('data-ty',v=>activeTy=v);
+single('data-wd',v=>activeWd=v);
+document.getElementById('ed-slider').addEventListener('input',e=>{
+  minED=parseInt(e.target.value);
+  document.getElementById('ed-val').textContent=minED+'%';
+  renderAll();
+});
+
+// ── Lens tabs ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('.page-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.page-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeLens=parseInt(btn.dataset.lens);
+    document.getElementById('lens-1').style.display=activeLens===1?'block':'none';
+    document.getElementById('lens-2').style.display=activeLens===2?'block':'none';
+    document.getElementById('lens-3').style.display=activeLens===3?'block':'none';
+    renderAll();
+  });
+});
+
+// ── Lens 1 controls ───────────────────────────────────────────────────────────
+document.querySelectorAll('[data-subj1]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-subj1]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); l1Subj=btn.dataset.subj1; renderL1();
+  });
+});
+document.querySelectorAll('[data-src1]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-src1]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); l1Src=btn.dataset.src1; renderL1();
+  });
+});
+
+// ── Lens 2 controls ───────────────────────────────────────────────────────────
+document.querySelectorAll('[data-subj2]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-subj2]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); l2Subj=btn.dataset.subj2; renderL2();
+  });
+});
+document.querySelectorAll('[data-src2]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-src2]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); l2Src=btn.dataset.src2; renderL2();
+  });
+});
+
+// ── Lens 3 controls ───────────────────────────────────────────────────────────
+document.querySelectorAll('[data-subj3]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-subj3]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); l3Subj=btn.dataset.subj3; renderL3();
+  });
+});
+document.querySelectorAll('[data-sort3]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-sort3]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); l3Sort=btn.dataset.sort3; renderL3();
+  });
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderL2Groups();
+renderL1();
+</script>
+</body>
+</html>

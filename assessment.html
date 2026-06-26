@@ -1,7 +1,81 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EFDC — Assessment</title>
 <link rel="stylesheet" href="shared.css">
-</head><body>
+<style>
+/* School selector */
+.school-search-wrap{position:relative;margin-bottom:14px}
+#school-search{width:100%;padding:10px 14px;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-card);color:var(--text-primary);outline:none}
+#school-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(27,75,138,.1)}
+.search-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);z-index:100;max-height:280px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.search-option{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.search-option:last-child{border-bottom:none}
+.search-option:hover,.search-option.focused{background:var(--bg-secondary)}
+.search-option-name{font-weight:500;color:var(--text-primary)}
+.search-option-meta{font-size:11px;color:var(--text-secondary);white-space:nowrap}
+
+/* School detail panel */
+.school-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:none}
+.school-panel.visible{display:block}
+.panel-header{background:var(--accent);color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.panel-name{font-size:16px;font-weight:600;line-height:1.3;margin-bottom:4px}
+.panel-meta{font-size:12px;color:rgba(255,255,255,.7);display:flex;gap:8px;flex-wrap:wrap}
+.panel-score{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:500;color:white;text-align:right;line-height:1}
+.panel-score-lbl{font-size:10px;color:rgba(255,255,255,.6);text-align:right;margin-top:3px}
+
+/* Group tabs */
+.group-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:14px 16px 0;border-bottom:1px solid var(--border);background:var(--bg-secondary)}
+.group-tab{font-size:12px;padding:5px 12px;border-radius:20px 20px 0 0;border:1px solid transparent;background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .12s;border-bottom:none;margin-bottom:-1px}
+.group-tab:hover{color:var(--text-primary);background:var(--bg-card)}
+.group-tab.active{background:var(--bg-card);color:var(--text-primary);font-weight:500;border-color:var(--border);border-bottom-color:var(--bg-card)}
+
+/* Comparison grid */
+.comparison-grid{padding:16px 20px}
+.comparison-section{margin-bottom:20px}
+.comparison-section-title{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.metric-compare-row{display:grid;grid-template-columns:140px 1fr 1fr 1fr;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bg-secondary)}
+.metric-compare-row:last-child{border-bottom:none}
+.metric-name{font-size:11px;color:var(--text-secondary);line-height:1.3}
+.compare-cell{display:flex;flex-direction:column;gap:3px}
+.compare-cell-header{font-size:9px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:2px}
+.compare-bar-wrap{display:flex;align-items:center;gap:5px}
+.compare-bar-bg{flex:1;height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden;position:relative}
+.compare-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.compare-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;min-width:30px}
+.compare-val.above{color:var(--green)}
+.compare-val.below{color:var(--red)}
+.compare-val.near{color:var(--amber)}
+.compare-val.neutral{color:var(--text-secondary)}
+.no-data-cell{font-size:11px;color:var(--text-tertiary);font-style:italic}
+
+/* Legend for compare */
+.compare-legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 20px;background:var(--bg-secondary);border-top:1px solid var(--border);font-size:11px;color:var(--text-secondary)}
+.cl-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+
+/* School list (browse mode) */
+.browse-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.browse-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;cursor:pointer;transition:all .12s}
+.browse-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.browse-card-name{font-size:13px;font-weight:600;margin-bottom:5px}
+.browse-card-sub{font-size:11px;color:var(--text-secondary);display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.mini-bars{display:flex;flex-direction:column;gap:3px}
+.mini-bar-row{display:flex;align-items:center;gap:5px}
+.mini-bar-label{font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--text-tertiary);min-width:52px;white-space:nowrap}
+.mini-bar-bg{flex:1;height:5px;background:var(--bg-secondary);border-radius:3px;position:relative}
+.mini-bar-school{height:100%;border-radius:3px;position:absolute;left:0;top:0}
+.mini-bar-city{width:2px;height:9px;border-radius:1px;position:absolute;top:-2px;background:var(--text-tertiary)}
+.mini-val{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text-tertiary);min-width:24px;text-align:right}
+
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--accent);cursor:pointer;padding:8px 0;margin-bottom:12px;background:none;border:none;font-family:inherit}
+.back-btn:hover{text-decoration:underline}
+
+.no-results{text-align:center;padding:3rem;color:var(--text-tertiary);font-size:14px}
+</style>
+</head>
+<body>
 <nav class="site-nav">
   <span class="nav-brand">EFDC · SY2024–25</span>
   <div class="nav-links">
@@ -15,22 +89,26 @@
     <a class="nav-link" href="discipline.html">Discipline</a>
   </div>
 </nav>
+
 <div class="page-header">
   <div class="header-eyebrow">Education Forward DC · Assessment</div>
-  <div class="header-title">Assessment Performance · SY2024–25</div>
-  <div class="header-sub">OSSE growth and proficiency metrics alongside DC CAPE test scores (Meeting/Exceeding and Approaching/Meeting/Exceeding) — ELA and Math</div>
+  <div class="header-title">Assessment Deep Dive · SY2024–25</div>
+  <div class="header-sub">Select a school to compare student group performance against the city average and schools in the same framework — OSSE growth metrics and DC CAPE proficiency</div>
   <div class="header-stats">
-    <div class="hstat"><span class="hstat-num" id="h-n">—</span><span class="hstat-lbl">Schools shown</span></div>
-    <div class="hstat"><span class="hstat-num">32.5%</span><span class="hstat-lbl">State CAPE M/E ELA</span></div>
-    <div class="hstat"><span class="hstat-num">25.0%</span><span class="hstat-lbl">State CAPE M/E Math</span></div>
-    <div class="hstat"><span class="hstat-num">50.0</span><span class="hstat-lbl">State MGP ELA (target)</span></div>
+    <div class="hstat"><span class="hstat-num">200</span><span class="hstat-lbl">Schools</span></div>
+    <div class="hstat"><span class="hstat-num">32.5%</span><span class="hstat-lbl">City CAPE M/E ELA avg</span></div>
+    <div class="hstat"><span class="hstat-num">25.0%</span><span class="hstat-lbl">City CAPE M/E Math avg</span></div>
+    <div class="hstat"><span class="hstat-num">50.0</span><span class="hstat-lbl">City median growth (target)</span></div>
   </div>
 </div>
+
 <div class="main">
   <div class="context-bar">
-    <strong>Reading this page:</strong> Each card shows two sections — <strong>CAPE scores</strong> (actual % of students meeting/exceeding or approaching/meeting/exceeding DC CAPE standards) and <strong>OSSE growth metrics</strong> (growth to proficiency and median growth percentile, scored as % of points earned). Bars compare each school to the DC statewide average (marker line). A school can have strong proficiency but weak growth, or vice versa — both matter. Click any card to expand full detail.
+    <strong>How to use this page:</strong> Search or browse to select a school. Each student group tab shows three bars — the school's score, the DC citywide average for that group, and the average for schools in the same framework (Elementary / Middle / High School). OSSE metrics are % of accountability points earned; CAPE metrics are % of students meeting the threshold. Click any school card below to open its full breakdown.
   </div>
-  <div class="filters-block">
+
+  <!-- Filters for browse mode -->
+  <div id="browse-filters" class="filters-block">
     <div class="filter-row">
       <span class="filter-label">Score tier</span>
       <button class="pill tier-60p active" data-tier="60+">60+</button>
@@ -68,82 +146,320 @@
       <span class="slider-note">DC avg: 44.8%</span>
     </div>
   </div>
-  <div class="summary-strip" id="summary-strip"></div>
-  <div class="grid" id="school-grid"></div>
-  <div class="legend">
-    <div class="legend-title">Colors</div>
-    <div class="legend-items">
-      <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div>ELA metrics</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#E07B20"></div>Math metrics</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#639922"></div>Growth metrics</div>
-      <div class="legend-item" style="gap:8px"><div style="width:2px;height:12px;background:#9B9890;border-radius:1px"></div>State average (marker)</div>
+
+  <!-- Search -->
+  <div class="school-search-wrap">
+    <input type="text" id="school-search" placeholder="Search for a school by name…" autocomplete="off">
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+
+  <!-- Detail panel -->
+  <div class="school-panel" id="school-panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-name" id="panel-name">—</div>
+        <div class="panel-meta" id="panel-meta"></div>
+      </div>
+      <div>
+        <div class="panel-score" id="panel-score">—</div>
+        <div class="panel-score-lbl">Accountability score</div>
+      </div>
+    </div>
+    <div class="group-tabs" id="group-tabs"></div>
+    <div class="comparison-grid" id="comparison-grid"></div>
+    <div class="compare-legend">
+      <span><span class="cl-dot" style="background:#378ADD"></span>School</span>
+      <span><span class="cl-dot" style="background:#9B9890"></span>DC city avg</span>
+      <span><span class="cl-dot" style="background:#E07B20"></span>Framework avg (same school level)</span>
+      <span style="color:var(--green)">▲ above benchmark</span>
+      <span style="color:var(--red)">▼ below benchmark</span>
+    </div>
+    <div style="padding:10px 20px 14px;text-align:right">
+      <button class="back-btn" id="back-btn">← Back to school list</button>
     </div>
   </div>
+
+  <!-- Browse list -->
+  <div id="browse-section">
+    <div class="summary-strip" id="summary-strip"></div>
+    <div class="browse-list" id="browse-list"></div>
+  </div>
+
   <div class="footer">Source: OSSE DC School Report Card SY2024–25 · DC CAPE SY2024–25 · Education Forward DC internal analysis</div>
 </div>
-<script src="data.js"></script>
+
+<script src="assessment_data.js"></script>
 <script src="shared.js"></script>
 <script>
-function renderCard(s){
-  const tk = tierKey(s.tier);
-  const cape = s.cape||{};
-  const asmnt = s.assessment||{};
+const OSSE_METRICS = [
+  {key:'Growth to Proficiency - ELA', label:'Growth to Proficiency — ELA', max:100},
+  {key:'Growth to Proficiency - Math', label:'Growth to Proficiency — Math', max:100},
+  {key:'Median Growth Percentile - ELA', label:'Median Growth Percentile — ELA', max:100},
+  {key:'Median Growth Percentile - Math', label:'Median Growth Percentile — Math', max:100},
+];
+const CAPE_METRICS = [
+  {key:'me_ela', label:'CAPE Meeting/Exceeding — ELA', max:100},
+  {key:'me_math', label:'CAPE Meeting/Exceeding — Math', max:100},
+  {key:'ame_ela', label:'CAPE Approaching/Meeting/Exceeding — ELA', max:100},
+  {key:'ame_math', label:'CAPE Approaching/Meeting/Exceeding — Math', max:100},
+];
+const SCHOOL_COLOR = '#378ADD';
+const CITY_COLOR = '#9B9890';
+const FW_COLOR = '#E07B20';
 
-  // CAPE bars
-  const capeBars = [
-    renderBar('M/E ELA', cape.me_ela?.score, cape.me_ela?.state||32.5, '#378ADD'),
-    renderBar('M/E Math', cape.me_math?.score, cape.me_math?.state||25.0, '#E07B20'),
-    renderBar('AME ELA', cape.ame_ela?.score, cape.ame_ela?.state||52.9, '#378ADD'),
-    renderBar('AME Math', cape.ame_math?.score, cape.ame_math?.state||45.3, '#E07B20'),
-  ].filter(Boolean).join('');
+let activeTiers = new Set(['60+','40-60','20-40','<20']);
+let activeFw='all', activeTy='all', activeWd='all', minED=0;
+let selectedSchool = null;
+let activeGroup = null;
 
-  // Growth bars
-  const growthBars = [
-    renderBar('GtP ELA', asmnt['Growth to Proficiency - ELA']?.score, asmnt['Growth to Proficiency - ELA']?.state||57.0, '#639922'),
-    renderBar('GtP Math', asmnt['Growth to Proficiency - Math']?.score, asmnt['Growth to Proficiency - Math']?.state||48.2, '#639922'),
-    renderBar('MGP ELA', asmnt['Median Growth Percentile - ELA']?.score, asmnt['Median Growth Percentile - ELA']?.state||50.0, '#7F77DD'),
-    renderBar('MGP Math', asmnt['Median Growth Percentile - Math']?.score, asmnt['Median Growth Percentile - Math']?.state||50.3, '#7F77DD'),
-  ].filter(Boolean).join('');
+function tierKey(t){
+  if(t==='<20') return 'u20';
+  if(t==='20-40') return '2040';
+  if(t==='40-60') return '4060';
+  return '60p';
+}
 
-  const hasCape = capeBars.length > 0;
-  const hasGrowth = growthBars.length > 0;
+function baseFilter(s){
+  if(!activeTiers.has(s.tier)) return false;
+  if(activeFw!=='all' && s.fw_key!==activeFw) return false;
+  if(activeTy!=='all' && s.type!==activeTy) return false;
+  if(activeWd!=='all' && s.ward!==parseInt(activeWd)) return false;
+  if(minED>0 && (s.ed_pct==null||s.ed_pct<minED)) return false;
+  return true;
+}
 
-  const detailRows = [
-    renderDetailRow('CAPE Meeting/Exceeding ELA', cape.me_ela?.score, cape.me_ela?.state||32.5),
-    renderDetailRow('CAPE Meeting/Exceeding Math', cape.me_math?.score, cape.me_math?.state||25.0),
-    renderDetailRow('CAPE Appr/Meeting/Exceeding ELA', cape.ame_ela?.score, cape.ame_ela?.state||52.9),
-    renderDetailRow('CAPE Appr/Meeting/Exceeding Math', cape.ame_math?.score, cape.ame_math?.state||45.3),
-    renderDetailRow('Growth to Proficiency — ELA', asmnt['Growth to Proficiency - ELA']?.score, asmnt['Growth to Proficiency - ELA']?.state||57.0),
-    renderDetailRow('Growth to Proficiency — Math', asmnt['Growth to Proficiency - Math']?.score, asmnt['Growth to Proficiency - Math']?.state||48.2),
-    renderDetailRow('Median Growth Percentile — ELA', asmnt['Median Growth Percentile - ELA']?.score, asmnt['Median Growth Percentile - ELA']?.state||50.0),
-    renderDetailRow('Median Growth Percentile — Math', asmnt['Median Growth Percentile - Math']?.score, asmnt['Median Growth Percentile - Math']?.state||50.3),
-  ].filter(Boolean).join('');
+// ── Search ────────────────────────────────────────────────────────────────────
+const searchInput = document.getElementById('school-search');
+const dropdown = document.getElementById('search-dropdown');
 
-  return `<div class="card" onclick="this.classList.toggle('expanded')">
-    <div class="card-top">
-      <div class="score-badge score-${tk}">${s.score.toFixed(1)}</div>
-      <div style="flex:1;min-width:0"><div class="card-name">${s.name}</div><div class="card-sub">${renderSchoolSub(s)}</div></div>
-    </div>
-    ${hasCape?`<div class="metric-section-label">CAPE Proficiency</div><div class="cat-bars">${capeBars}</div>`:''}
-    ${hasGrowth?`<div class="metric-section-label">OSSE Growth Metrics</div><div class="cat-bars">${growthBars}</div>`:''}
-    ${!hasCape&&!hasGrowth?'<span style="font-size:11px;color:var(--text-tertiary)">No assessment data available</span>':''}
-    <div class="detail">
-      <div class="detail-note">CAPE % = share of students meeting/exceeding DC CAPE standards · OSSE metrics = % of points earned in accountability framework · Marker = state avg</div>
-      ${detailRows||'<span style="font-size:12px;color:var(--text-tertiary)">No detail available</span>'}
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if(q.length < 2){ dropdown.style.display='none'; return; }
+  const matches = ASMNT_SCHOOLS.filter(s => s.name.toLowerCase().includes(q)).slice(0,12);
+  if(!matches.length){ dropdown.style.display='none'; return; }
+  dropdown.innerHTML = matches.map(s =>
+    `<div class="search-option" data-code="${s.code}">
+      <span class="search-option-name">${s.name}</span>
+      <span class="search-option-meta">${s.type} · ${s.fw} · Score ${s.score}</span>
+    </div>`
+  ).join('');
+  dropdown.style.display='block';
+  dropdown.querySelectorAll('.search-option').forEach(el => {
+    el.addEventListener('click', () => {
+      const s = ASMNT_SCHOOLS.find(x => x.code === parseInt(el.dataset.code));
+      if(s) openSchool(s);
+      dropdown.style.display='none';
+      searchInput.value = '';
+    });
+  });
+});
+document.addEventListener('click', e => { if(!e.target.closest('.school-search-wrap')) dropdown.style.display='none'; });
+
+// ── Comparison bars ───────────────────────────────────────────────────────────
+function valClass(school, benchmark){
+  if(school==null||benchmark==null) return 'neutral';
+  const diff = school - benchmark;
+  if(diff >= 3) return 'above';
+  if(diff <= -3) return 'below';
+  return 'near';
+}
+
+function renderCompareCell(val, color, max, label){
+  if(val==null) return `<div class="compare-cell"><div class="compare-cell-header">${label}</div><span class="no-data-cell">n/a</span></div>`;
+  const pct = Math.min(100, Math.max(0, val/max*100)).toFixed(1);
+  return `<div class="compare-cell">
+    <div class="compare-cell-header">${label}</div>
+    <div class="compare-bar-wrap">
+      <div class="compare-bar-bg"><div class="compare-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <span class="compare-val ${valClass(val,null)}" style="color:${color}">${val.toFixed(1)}</span>
     </div>
   </div>`;
 }
 
-function render(filterFn){
-  const schools = SCHOOLS.filter(filterFn).sort((a,b)=>b.score-a.score);
-  document.getElementById('school-grid').innerHTML = schools.length
-    ? schools.map(renderCard).join('')
+function renderComparison(school, group){
+  const osse = school.osse[group] || {};
+  const cape = school.cape[group] || {};
+  let html = '';
+
+  // OSSE section
+  const osseRows = OSSE_METRICS.map(m => {
+    const d = osse[m.key];
+    if(!d && !d?.school) return '';
+    const sv = d?.school, cv = d?.city, fv = d?.framework;
+    if(sv==null&&cv==null) return '';
+    return `<div class="metric-compare-row">
+      <div class="metric-name">${m.label}</div>
+      ${renderCompareCell(sv, SCHOOL_COLOR, m.max, 'This school')}
+      ${renderCompareCell(cv, CITY_COLOR, m.max, 'DC city avg')}
+      ${renderCompareCell(fv, FW_COLOR, m.max, school.fw + ' avg')}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  if(osseRows){
+    html += `<div class="comparison-section">
+      <div class="comparison-section-title">OSSE Growth Metrics — % of accountability points earned</div>
+      ${osseRows}
+    </div>`;
+  }
+
+  // CAPE section
+  const capeRows = CAPE_METRICS.map(m => {
+    const d = cape[m.key];
+    if(!d) return '';
+    const sv = d?.school, cv = d?.city, fv = d?.framework;
+    if(sv==null&&cv==null) return '';
+    return `<div class="metric-compare-row">
+      <div class="metric-name">${m.label}</div>
+      ${renderCompareCell(sv, SCHOOL_COLOR, m.max, 'This school')}
+      ${renderCompareCell(cv, CITY_COLOR, m.max, 'DC city avg')}
+      ${renderCompareCell(fv, FW_COLOR, m.max, school.fw + ' avg')}
+    </div>`;
+  }).filter(Boolean).join('');
+
+  if(capeRows){
+    html += `<div class="comparison-section">
+      <div class="comparison-section-title">DC CAPE — % of students meeting threshold</div>
+      ${capeRows}
+    </div>`;
+  }
+
+  if(!html) html = '<div class="no-data-cell" style="padding:1rem">No assessment data available for this student group at this school.</div>';
+  return html;
+}
+
+// ── Open school ───────────────────────────────────────────────────────────────
+function openSchool(s){
+  selectedSchool = s;
+  document.getElementById('panel-name').textContent = s.name;
+
+  const tk = tierKey(s.tier);
+  const typeTag = s.type==='DCPS'?'<span class="tag tag-dcps" style="color:rgba(255,255,255,.8);background:rgba(255,255,255,.15)">DCPS</span>':'<span class="tag tag-charter" style="color:rgba(255,255,255,.8);background:rgba(255,255,255,.15)">Charter</span>';
+  document.getElementById('panel-meta').innerHTML = `${typeTag}<span>${s.fw}</span>${s.ward?`<span>Ward ${s.ward}</span>`:''}<span>${s.ed_pct!=null?s.ed_pct+'% at-risk':''}</span><span>${s.enrollment?s.enrollment.toLocaleString()+' enrolled':''}</span>`;
+  document.getElementById('panel-score').textContent = s.score.toFixed(1);
+
+  // Build group tabs — only groups that have any data
+  const groups = [...new Set([...Object.keys(s.osse), ...Object.keys(s.cape)])];
+  const tabsEl = document.getElementById('group-tabs');
+  tabsEl.innerHTML = groups.map(g =>
+    `<button class="group-tab" data-group="${g}">${g}</button>`
+  ).join('');
+
+  const firstGroup = groups[0] || null;
+  activeGroup = firstGroup;
+  if(firstGroup){
+    tabsEl.querySelector(`[data-group="${firstGroup}"]`)?.classList.add('active');
+    document.getElementById('comparison-grid').innerHTML = renderComparison(s, firstGroup);
+  }
+
+  tabsEl.querySelectorAll('.group-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabsEl.querySelectorAll('.group-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      activeGroup = btn.dataset.group;
+      document.getElementById('comparison-grid').innerHTML = renderComparison(s, activeGroup);
+    });
+  });
+
+  document.getElementById('school-panel').classList.add('visible');
+  document.getElementById('browse-section').style.display='none';
+  document.getElementById('browse-filters').style.display='none';
+  document.getElementById('school-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+document.getElementById('back-btn').addEventListener('click', () => {
+  selectedSchool = null;
+  document.getElementById('school-panel').classList.remove('visible');
+  document.getElementById('browse-section').style.display='block';
+  document.getElementById('browse-filters').style.display='block';
+});
+
+// ── Browse list ───────────────────────────────────────────────────────────────
+function renderBrowseCard(s){
+  const tk = tierKey(s.tier);
+  const typeTag = s.type==='DCPS'?'<span class="tag tag-dcps">DCPS</span>':'<span class="tag tag-charter">Charter</span>';
+  const fwClass = s.fw_key==='elem'?'tag-elem':s.fw_key==='middle'?'tag-middle':'tag-high';
+
+  // Show mini bars for All Students OSSE growth to proficiency and CAPE M/E
+  const allOsse = s.osse?.['All Students'] || {};
+  const allCape = s.cape?.['All Students'] || {};
+
+  function miniBars(){
+    const rows = [];
+    const gtpEla = allOsse['Growth to Proficiency - ELA'];
+    const gtpMath = allOsse['Growth to Proficiency - Math'];
+    const meEla = allCape['me_ela'];
+    const meMath = allCape['me_math'];
+
+    function miniBar(label, val, cityVal){
+      if(val==null) return '';
+      const sw = Math.min(100,Math.max(0,val)).toFixed(1);
+      const cw = cityVal!=null?Math.min(100,Math.max(0,cityVal)).toFixed(1):null;
+      const color = val >= (cityVal||0) ? '#639922' : '#D85A30';
+      return `<div class="mini-bar-row">
+        <span class="mini-bar-label">${label}</span>
+        <div class="mini-bar-bg">
+          <div class="mini-bar-school" style="width:${sw}%;background:${color};opacity:.8"></div>
+          ${cw?`<div class="mini-bar-city" style="left:${cw}%"></div>`:''}
+        </div>
+        <span class="mini-val">${val.toFixed(0)}</span>
+      </div>`;
+    }
+    return [
+      miniBar('GtP ELA', gtpEla?.school, gtpEla?.city),
+      miniBar('GtP Math', gtpMath?.school, gtpMath?.city),
+      miniBar('CAPE ELA', meEla?.school, meEla?.city),
+      miniBar('CAPE Math', meMath?.school, meMath?.city),
+    ].filter(Boolean).join('');
+  }
+
+  return `<div class="browse-card" onclick="openSchool(ASMNT_SCHOOLS.find(x=>x.code===${s.code}))">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <div class="browse-card-name">${s.name}</div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--tier-${tk},var(--text-primary));white-space:nowrap;padding-left:8px">${s.score.toFixed(1)}</span>
+    </div>
+    <div class="browse-card-sub">
+      <span class="tier-badge tb-${tk}">${s.tier}</span>${typeTag}<span class="tag ${fwClass}">${s.fw}</span>
+      ${s.ward?`<span>Ward ${s.ward}</span>`:''}
+      ${s.ed_pct!=null?`<span>${s.ed_pct}% at-risk</span>`:''}
+    </div>
+    <div class="mini-bars">${miniBars()||'<span style="font-size:11px;color:var(--text-tertiary)">No assessment data</span>'}</div>
+  </div>`;
+}
+
+function renderBrowse(){
+  const schools = ASMNT_SCHOOLS.filter(baseFilter).sort((a,b)=>b.score-a.score);
+  document.getElementById('browse-list').innerHTML = schools.length
+    ? schools.map(renderBrowseCard).join('')
     : '<div class="no-results">No schools match the current filters.</div>';
-  document.getElementById('h-n').textContent = schools.length;
   renderSummaryStrip(schools);
 }
 
-const baseFilter = makeFilters({onRender: render});
-render(baseFilter);
+// ── Filters ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('[data-tier]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const t=btn.dataset.tier;
+    if(activeTiers.has(t)){if(activeTiers.size===1)return;activeTiers.delete(t);btn.classList.remove('active');}
+    else{activeTiers.add(t);btn.classList.add('active');}
+    renderBrowse();
+  });
+});
+function single(attr,setter){
+  document.querySelectorAll(`[${attr}]`).forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll(`[${attr}]`).forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      setter(btn.dataset[attr.replace('data-','')]);
+      renderBrowse();
+    });
+  });
+}
+single('data-fw',v=>activeFw=v);
+single('data-ty',v=>activeTy=v);
+single('data-wd',v=>activeWd=v);
+const slider=document.getElementById('ed-slider');
+slider.addEventListener('input',()=>{minED=parseInt(slider.value);document.getElementById('ed-val').textContent=minED+'%';renderBrowse();});
+
+renderBrowse();
 </script>
-</body></html>
+</body>
+</html>

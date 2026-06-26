@@ -74,23 +74,55 @@
 <script src="data.js"></script>
 <script src="shared.js"></script>
 <script>
+// For chronic absenteeism: lower is better, so invert gap coloring
+function gapClassInverted(g){
+  if(g==null) return '';
+  if(g<=-3) return 'gap-pos';
+  if(g<=3) return 'gap-mild';
+  return 'gap-strong';
+}
+function renderBarInverted(label,score,state,color){
+  if(score==null) return '';
+  const sw=Math.min(100,Math.max(0,score)).toFixed(1);
+  const stw=Math.min(100,Math.max(0,state)).toFixed(1);
+  const gap=score-state;
+  const gStr=gap>=0?`+${gap.toFixed(0)}`:gap.toFixed(0);
+  return `<div class="cat-row">
+    <span class="cat-label">${label}</span>
+    <div class="bar-container">
+      <div class="bar-state" style="width:${stw}%;background:${color}"></div>
+      <div class="bar-school" style="width:${sw}%;background:${color}"></div>
+      <div class="bar-marker" style="left:${stw}%"></div>
+    </div>
+    <span class="gap-label ${gapClassInverted(gap)}">${gStr}</span>
+  </div>`;
+}
+function renderDetailRowInverted(label,score,state){
+  if(score==null) return '';
+  const gap=score-state;
+  const gStr=gap>=0?`+${gap.toFixed(1)}`:gap.toFixed(1);
+  return `<div class="detail-row">
+    <span class="detail-cat">${label}</span>
+    <div class="detail-vals"><span>${score.toFixed(1)}</span><span class="detail-state">vs ${state.toFixed(1)} state</span><span class="${gapClassInverted(gap)}">${gStr}</span></div>
+  </div>`;
+}
 function renderCard(s){
   const tk=tierKey(s.tier);
   const m=s.attendance||{};
   const bars=[
-    renderBar("Chronic Absent.",m["Chronic Absenteeism"]?.score,m["Chronic Absenteeism"]?.state||0,"#EF9F27"),
+    renderBarInverted("Chronic Absent.",m["Chronic Absenteeism"]?.score,m["Chronic Absenteeism"]?.state||0,"#EF9F27"),
     renderBar("Attend. Growth",m["Attendance Growth"]?.score,m["Attendance Growth"]?.state||0,"#639922"),
-    renderBar("PreK Chr. Absent.",m["Pre-K Chronic Absenteeism"]?.score,m["Pre-K Chronic Absenteeism"]?.state||0,"#EF9F27"),
+    renderBarInverted("PreK Chr. Absent.",m["Pre-K Chronic Absenteeism"]?.score,m["Pre-K Chronic Absenteeism"]?.state||0,"#EF9F27"),
   ].filter(Boolean).join("");
   const detail=[
-    renderDetailRow("Chronic Absenteeism",m["Chronic Absenteeism"]?.score,m["Chronic Absenteeism"]?.state||0),
+    renderDetailRowInverted("Chronic Absenteeism",m["Chronic Absenteeism"]?.score,m["Chronic Absenteeism"]?.state||0),
     renderDetailRow("Attendance Growth",m["Attendance Growth"]?.score,m["Attendance Growth"]?.state||0),
-    renderDetailRow("Pre-K Chronic Absenteeism",m["Pre-K Chronic Absenteeism"]?.score,m["Pre-K Chronic Absenteeism"]?.state||0),
+    renderDetailRowInverted("Pre-K Chronic Absenteeism",m["Pre-K Chronic Absenteeism"]?.score,m["Pre-K Chronic Absenteeism"]?.state||0),
   ].filter(Boolean).join("");
   return `<div class="card" onclick="this.classList.toggle('expanded')">
     <div class="card-top"><div class="score-badge score-${tk}">${s.score.toFixed(1)}</div><div style="flex:1;min-width:0"><div class="card-name">${s.name}</div><div class="card-sub">${renderSchoolSub(s)}</div></div></div>
-    <div class="cat-bars">${bars||"<span style=\"font-size:11px;color:var(--text-tertiary)\">No attendance data</span>"}</div>
-    <div class="detail"><div class="detail-note">Chronic absenteeism: lower is better — negative gap = better than state. Attendance growth: higher is better. Marker = state avg.</div>${detail}</div>
+    <div class="cat-bars">${bars||'<span style="font-size:11px;color:var(--text-tertiary)">No attendance data</span>'}</div>
+    <div class="detail"><div class="detail-note">Chronic absenteeism: lower is better — green = below state avg (good), red = above state avg. Attendance growth: higher is better. Marker = state avg.</div>${detail}</div>
   </div>`;
 }
 function render(filterFn){

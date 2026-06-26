@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EFDC — School Profile</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── Search ──────────────────────────────────────────────────────────────── */
+.search-hero{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;text-align:center}
+.search-hero-title{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
+.search-hero-sub{font-size:12px;color:var(--text-secondary);margin-bottom:16px}
+.search-wrap{position:relative;max-width:520px;margin:0 auto}
+#school-search{width:100%;padding:12px 16px;font-size:14px;font-family:inherit;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg-card);color:var(--text-primary);outline:none;transition:border-color .12s}
+#school-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(27,75,138,.1)}
+.search-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);z-index:100;max-height:320px;overflow-y:auto;display:none;box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.search-opt{padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;transition:background .08s}
+.search-opt:last-child{border-bottom:none}
+.search-opt:hover,.search-opt.kbd-focus{background:var(--bg-secondary)}
+.search-opt-name{font-size:13px;font-weight:500;color:var(--text-primary)}
+.search-opt-meta{font-size:11px;color:var(--text-secondary);white-space:nowrap;text-align:right}
+.search-hint{font-size:11px;color:var(--text-tertiary);margin-top:8px}
+
+/* ── Profile shell ───────────────────────────────────────────────────────── */
+.profile{display:none}
+.profile.visible{display:block}
+
+/* ── Profile header ──────────────────────────────────────────────────────── */
+.profile-header{background:var(--accent);border-radius:var(--radius);padding:20px 24px;color:white;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.ph-name{font-size:18px;font-weight:600;line-height:1.3;margin-bottom:6px}
+.ph-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ph-tag{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9)}
+.ph-stats{display:flex;gap:10px;flex-wrap:wrap}
+.ph-stat{background:rgba(255,255,255,.12);border-radius:5px;padding:8px 14px;text-align:center}
+.ph-stat-num{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:500;color:white;display:block}
+.ph-stat-lbl{font-size:10px;color:rgba(255,255,255,.65)}
+.change-school{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:rgba(255,255,255,.7);cursor:pointer;background:none;border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 12px;font-family:inherit;margin-top:8px;transition:all .12s}
+.change-school:hover{color:white;border-color:rgba(255,255,255,.7)}
+
+/* ── Section headers ─────────────────────────────────────────────────────── */
+.profile-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.ps-header{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.ps-icon{font-size:16px}
+.ps-title{font-size:13px;font-weight:600;color:var(--text-primary);flex:1}
+.ps-toggle{font-size:12px;color:var(--text-tertiary);transition:transform .2s}
+.ps-toggle.open{transform:rotate(180deg)}
+.ps-body{padding:16px 18px;display:none}
+.ps-body.open{display:block}
+
+/* ── Score card ──────────────────────────────────────────────────────────── */
+.score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.score-card{background:var(--bg-secondary);border-radius:var(--radius-sm);padding:12px 14px;text-align:center}
+.sc-num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:500;display:block}
+.sc-lbl{font-size:10px;color:var(--text-secondary);margin-top:2px}
+.sc-note{font-size:9px;color:var(--text-tertiary);margin-top:2px}
+
+/* ── Metric rows ─────────────────────────────────────────────────────────── */
+.metric-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg-secondary)}
+.metric-row:last-child{border-bottom:none}
+.metric-name{font-size:12px;color:var(--text-secondary);min-width:180px;flex-shrink:0}
+.metric-bar-wrap{flex:1;display:flex;align-items:center;gap:6px}
+.metric-bar-bg{flex:1;height:8px;background:var(--bg-secondary);border-radius:4px;position:relative}
+.metric-bar-fill{height:100%;border-radius:4px;position:absolute;left:0;top:0}
+.metric-bar-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text-tertiary);border-radius:1px}
+.metric-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;min-width:32px;text-align:right}
+.metric-gap{font-family:'IBM Plex Mono',monospace;font-size:10px;min-width:32px;text-align:right}
+.metric-state{font-size:10px;color:var(--text-tertiary);min-width:60px;text-align:right}
+
+/* ── Group comparison table ──────────────────────────────────────────────── */
+.group-table{width:100%;border-collapse:collapse;font-size:12px}
+.group-table th{text-align:left;font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);padding:6px 8px;border-bottom:2px solid var(--border);white-space:nowrap}
+.group-table td{padding:7px 8px;border-bottom:1px solid var(--bg-secondary);vertical-align:middle}
+.group-table tr:last-child td{border-bottom:none}
+.group-table tr:hover td{background:var(--bg-secondary)}
+.gt-group{font-weight:500;color:var(--text-primary)}
+.gt-val{font-family:'IBM Plex Mono',monospace;font-weight:500}
+.gt-gap{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:2px 6px;border-radius:3px;white-space:nowrap}
+.gt-gap.pos{background:#E6F2DC;color:#2D6A10}
+.gt-gap.neg{background:#FAEAEA;color:#8A1F1F}
+.gt-gap.neu{background:var(--bg-secondary);color:var(--text-secondary)}
+.gt-gap.warn{background:#FDF0D5;color:#7A4A00}
+
+/* ── Equity gap visual ───────────────────────────────────────────────────── */
+.equity-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.equity-card{background:var(--bg-secondary);border-radius:var(--radius-sm);padding:14px}
+.equity-card-title{font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em}
+.eq-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.eq-label{font-size:11px;color:var(--text-secondary);min-width:40px}
+.eq-bar-bg{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.eq-bar-fill{height:100%;border-radius:5px}
+.eq-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;min-width:32px;text-align:right}
+.eq-gap-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.eq-gap-label{font-size:11px;color:var(--text-secondary)}
+.eq-gap-val{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500}
+
+/* ── Subject tabs inside sections ────────────────────────────────────────── */
+.mini-tabs{display:flex;gap:4px;margin-bottom:12px}
+.mini-tab{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:inherit;transition:all .1s}
+.mini-tab.active{background:var(--accent);color:white;border-color:var(--accent);font-weight:500}
+
+.no-data{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:8px 0}
+@media(max-width:600px){
+  .equity-grid{grid-template-columns:1fr}
+  .metric-name{min-width:120px}
+  .profile-header{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="nav-brand">EFDC · SY2024–25</span>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="schools.html">All Schools</a>
+    <a class="nav-link" href="assessment.html">Assessment</a>
+    <a class="nav-link" href="equity.html">Equity & Outperformance</a>
+    <a class="nav-link active" href="school.html">School Profile</a>
+    <a class="nav-link" href="attendance.html">Attendance</a>
+    <a class="nav-link" href="advanced.html">Adv. Coursework & SAT</a>
+    <a class="nav-link" href="graduation.html">Graduation</a>
+    <a class="nav-link" href="class.html">CLASS</a>
+    <a class="nav-link" href="discipline.html">Discipline</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="header-eyebrow">Education Forward DC · School Profile</div>
+  <div class="header-title">Individual School Profile · SY2024–25</div>
+  <div class="header-sub">Full data for any school — accountability score, all metric categories, CAPE and OSSE assessment by student group, and internal equity gap</div>
+</div>
+
+<div class="main">
+
+  <!-- Search -->
+  <div class="search-hero" id="search-hero">
+    <div class="search-hero-title">Search for a school</div>
+    <div class="search-hero-sub">Start typing to see matching schools — select one to load its full profile</div>
+    <div class="search-wrap">
+      <input type="text" id="school-search" placeholder="e.g. Stanton, KIPP, Friendship…" autocomplete="off" spellcheck="false">
+      <div class="search-dropdown" id="search-dropdown"></div>
+    </div>
+    <div class="search-hint">200 DC public and charter schools · SY2024–25</div>
+  </div>
+
+  <!-- Profile -->
+  <div class="profile" id="profile"></div>
+
+  <div class="footer">Source: OSSE DC School Report Card SY2024–25 · DC CAPE SY2024–25 · FY2025 Enrollment Audit Data · Education Forward DC internal analysis</div>
+</div>
+
+<script src="profiles_data.js"></script>
+<script>
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function safe(v){ return (v===null||v===undefined||isNaN(v)) ? null : v; }
+function fmt(v,dec=1){ return v!=null ? v.toFixed(dec) : '—'; }
+function tierKey(t){ return t==='<20'?'u20':t==='20-40'?'2040':t==='40-60'?'4060':'60p'; }
+
+function gapClass(g,invert=false){
+  if(g==null) return '';
+  const v = invert ? -g : g;
+  if(v>=3) return 'gap-pos';
+  if(v>=-3) return 'gap-mild';
+  return 'gap-strong';
+}
+function chipClass(g,invert=false){
+  if(g==null) return 'neu';
+  const v = invert ? -g : g;
+  if(v>5) return 'pos';
+  if(v>=-5) return 'neu';
+  return 'neg';
+}
+function chipStr(g){ if(g==null) return '—'; return (g>0?'+':'')+g.toFixed(1); }
+
+function metricBar(label, score, state, color, invert=false, max=100){
+  if(score==null && state==null) return '';
+  const sw = score!=null ? Math.min(100,Math.max(0,score/max*100)).toFixed(1) : '0';
+  const stw = state!=null ? Math.min(100,Math.max(0,state/max*100)).toFixed(1) : '0';
+  const gap = (score!=null && state!=null) ? score-state : null;
+  const gStr = gap!=null ? (gap>=0?`+${gap.toFixed(1)}`:gap.toFixed(1)) : '';
+  const gc = gapClass(gap, invert);
+  return `<div class="metric-row">
+    <span class="metric-name">${label}</span>
+    <div class="metric-bar-wrap">
+      <div class="metric-bar-bg">
+        ${score!=null?`<div class="metric-bar-fill" style="width:${sw}%;background:${color};opacity:.85"></div>`:''}
+        ${state!=null?`<div class="metric-bar-marker" style="left:${stw}%"></div>`:''}
+      </div>
+      <span class="metric-val">${score!=null?score.toFixed(1):'—'}</span>
+      <span class="metric-gap ${gc}">${gStr}</span>
+      <span class="metric-state">${state!=null?'city: '+state.toFixed(1):''}</span>
+    </div>
+  </div>`;
+}
+
+function section(icon, title, bodyFn, startOpen=false){
+  const id = 'sec-'+Math.random().toString(36).slice(2,7);
+  const body = bodyFn();
+  if(!body) return '';
+  return `<div class="profile-section">
+    <div class="ps-header" onclick="toggleSection('${id}')">
+      <span class="ps-icon">${icon}</span>
+      <span class="ps-title">${title}</span>
+      <span class="ps-toggle${startOpen?' open':''}" id="arr-${id}">▼</span>
+    </div>
+    <div class="ps-body${startOpen?' open':''}" id="${id}">${body}</div>
+  </div>`;
+}
+
+function toggleSection(id){
+  const body = document.getElementById(id);
+  const arr = document.getElementById('arr-'+id);
+  body.classList.toggle('open');
+  arr.classList.toggle('open');
+}
+
+// ── Group comparison table ────────────────────────────────────────────────────
+function groupTable(groups, metric_ela, metric_math, cityKey_ela, cityKey_math, invert=false){
+  const rows = Object.entries(groups).map(([grp, data])=>{
+    const ela = data[metric_ela]?.school ?? data['ela'] ?? null;
+    const math = data[metric_math]?.school ?? data['math'] ?? null;
+    const c_ela = data[metric_ela]?.city ?? data['city_ela'] ?? null;
+    const c_math = data[metric_math]?.city ?? data['city_math'] ?? null;
+    const g_ela = (ela!=null&&c_ela!=null) ? ela-c_ela : null;
+    const g_math = (math!=null&&c_math!=null) ? math-c_math : null;
+    if(ela==null&&math==null) return '';
+    return `<tr>
+      <td class="gt-group">${grp}</td>
+      <td class="gt-val">${fmt(ela)}</td>
+      <td><span class="gt-gap ${chipClass(g_ela,invert)}">${chipStr(g_ela)}</span></td>
+      <td class="gt-val">${fmt(math)}</td>
+      <td><span class="gt-gap ${chipClass(g_math,invert)}">${chipStr(g_math)}</span></td>
+    </tr>`;
+  }).filter(Boolean).join('');
+  if(!rows) return '';
+  return `<table class="group-table">
+    <thead><tr>
+      <th>Student group</th>
+      <th>ELA</th><th>ELA gap</th>
+      <th>Math</th><th>Math gap</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ── Equity visual ─────────────────────────────────────────────────────────────
+function equitySection(eq){
+  if(!eq || Object.keys(eq).length===0) return '<div class="no-data">No equity gap data available for this school.</div>';
+  function eqCard(title, all, ed, gap, color){
+    if(all==null&&ed==null) return '';
+    const maxV = Math.max(all||0, ed||0, 1);
+    const allW = all!=null?(all/maxV*100).toFixed(1):'0';
+    const edW = ed!=null?(ed/maxV*100).toFixed(1):'0';
+    const gapColor = gap==null?'var(--text-tertiary)':gap<=5?'#2D6A10':gap<=15?'#7A4A00':'#8A1F1F';
+    return `<div class="equity-card">
+      <div class="equity-card-title">${title}</div>
+      <div class="eq-row"><span class="eq-label">All</span><div class="eq-bar-bg"><div class="eq-bar-fill" style="width:${allW}%;background:${color};opacity:.8"></div></div><span class="eq-val">${fmt(all)}</span></div>
+      <div class="eq-row"><span class="eq-label">ED</span><div class="eq-bar-bg"><div class="eq-bar-fill" style="width:${edW}%;background:${color};opacity:.45"></div></div><span class="eq-val">${fmt(ed)}</span></div>
+      <div class="eq-gap-row">
+        <span class="eq-gap-label">Gap (All − ED)</span>
+        <span class="eq-gap-val" style="color:${gapColor}">${gap!=null?(gap>0?'+':'')+gap.toFixed(1):'—'}</span>
+      </div>
+    </div>`;
+  }
+  const cards = [
+    eqCard('CAPE M/E — ELA', eq.cape_ela_all, eq.cape_ela_ed, eq.cape_ela_gap, '#378ADD'),
+    eqCard('CAPE M/E — Math', eq.cape_math_all, eq.cape_math_ed, eq.cape_math_gap, '#E07B20'),
+    eqCard('OSSE GtP — ELA', eq.osse_ela_all, eq.osse_ela_ed, eq.osse_ela_gap, '#639922'),
+    eqCard('OSSE GtP — Math', eq.osse_math_all, eq.osse_math_ed, eq.osse_math_gap, '#7F77DD'),
+  ].filter(Boolean).join('');
+  return `<div class="equity-grid">${cards}</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-tertiary)">Smaller gap = more equitable. Green ≤5pts · Amber 5–15pts · Red &gt;15pts. All Students vs Economically Disadvantaged at this school.</div>`;
+}
+
+// ── Build full profile ────────────────────────────────────────────────────────
+function buildProfile(s){
+  const tk = tierKey(s.tier);
+  const typeTag = s.type==='DCPS'?'<span class="ph-tag">DCPS</span>':'<span class="ph-tag">Charter</span>';
+  const fwTag = `<span class="ph-tag">${s.fw}</span>`;
+  const wardTag = s.ward?`<span class="ph-tag">Ward ${s.ward}</span>`:'';
+  const multiTag = s.multi_fw?'<span class="ph-tag">Multi-framework</span>':'';
+  const tierColors = {'<20':'#8A1F1F','20-40':'#7A4A00','40-60':'#1B4B8A','60+':'#2D6A10'};
+
+  const m = s.metrics || {};
+
+  // ── Accountability overview ─────────────────────────────────────────────
+  const overviewHTML = ()=>{
+    const cats = [
+      {label:'Assessment', key:'assessment', color:'#378ADD', metrics:['Growth to Proficiency - ELA','Growth to Proficiency - Math','Median Growth Percentile - ELA','Median Growth Percentile - Math']},
+      {label:'Attendance', key:'attendance', color:'#EF9F27', metrics:['Chronic Absenteeism','Attendance Growth','Pre-K Chronic Absenteeism'], invertChronic:true},
+      {label:'Advanced Coursework & SAT', key:'advanced', color:'#7F77DD', metrics:['Advanced Coursework Participation','Advanced Coursework Performance','SAT College Ready']},
+      {label:'Graduation', key:'graduation', color:'#D85A30', metrics:['Four-Year Graduation Rate','Five-Year Graduation Rate']},
+      {label:'CLASS', key:'class_metrics', color:'#639922', metrics:['CLASS - Pre-K Emotional Support','CLASS - Pre-K Classroom Organization','CLASS - Pre-K Instructional Support']},
+      {label:'Re-Enrollment', key:'movement', color:'#9B9890', metrics:['Re-Enrollment']},
+    ];
+    let html = '';
+    for(const cat of cats){
+      const data = m[cat.key]||{};
+      const rows = cat.metrics.map(metric=>{
+        const d = data[metric];
+        if(!d || d.score==null) return '';
+        const invert = cat.invertChronic && metric.includes('Absenteeism');
+        return metricBar(metric.replace('Growth to Proficiency - ','GtP — ').replace('Median Growth Percentile - ','MGP — ').replace('CLASS - Pre-K ','').replace('Advanced Coursework ','Adv. C/W '), d.score, d.state, cat.color, invert);
+      }).filter(Boolean).join('');
+      if(rows) html += `<div style="margin-bottom:14px"><div style="font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${cat.label}</div>${rows}</div>`;
+    }
+    return html || '<div class="no-data">No accountability metric data available.</div>';
+  };
+
+  // ── CAPE by student group ───────────────────────────────────────────────
+  const capeHTML = ()=>{
+    const groups = s.cape_groups||{};
+    if(!Object.keys(groups).length) return null;
+    return `<div style="font-size:11px;color:var(--text-tertiary);margin-bottom:10px">% of students Meeting or Exceeding DC CAPE standards · gap vs DC city average for that student group</div>
+      ${groupTable(groups,'me_ela','me_math','city_ela','city_math')}`;
+  };
+
+  // ── OSSE by student group ───────────────────────────────────────────────
+  const osseHTML = ()=>{
+    const groups = s.osse_groups||{};
+    if(!Object.keys(groups).length) return null;
+    return `<div style="font-size:11px;color:var(--text-tertiary);margin-bottom:10px">Growth to Proficiency % of accountability points earned · gap vs DC city average for that student group</div>
+      ${groupTable(groups,'Growth to Proficiency - ELA','Growth to Proficiency - Math','city_ela','city_math')}`;
+  };
+
+  // ── Discipline ──────────────────────────────────────────────────────────
+  const disciplineHTML = ()=>{
+    const data = m.discipline||{};
+    const rows = Object.entries(data).map(([metric,d])=>{
+      if(!d||d.score==null) return '';
+      return metricBar(metric, d.score, d.state, '#D85A30', true);
+    }).filter(Boolean).join('');
+    return rows||null;
+  };
+
+  const html = `
+    <div class="profile-header">
+      <div>
+        <div class="ph-name">${s.name}</div>
+        <div class="ph-tags">${typeTag}${fwTag}${wardTag}${multiTag}</div>
+        <button class="change-school" onclick="resetSearch()">← Search for another school</button>
+      </div>
+      <div class="ph-stats">
+        <div class="ph-stat">
+          <span class="ph-stat-num" style="color:white">${s.score.toFixed(1)}</span>
+          <span class="ph-stat-lbl">Accountability score</span>
+        </div>
+        <div class="ph-stat">
+          <span class="ph-stat-num">${s.ed_pct!=null?s.ed_pct+'%':'—'}</span>
+          <span class="ph-stat-lbl">At-risk enrollment</span>
+        </div>
+        <div class="ph-stat">
+          <span class="ph-stat-num">${s.enrollment!=null?s.enrollment.toLocaleString():'—'}</span>
+          <span class="ph-stat-lbl">Total enrollment</span>
+        </div>
+        <div class="ph-stat">
+          <span class="ph-stat-num"><span class="tier-badge tb-${tk}">${s.tier}</span></span>
+          <span class="ph-stat-lbl">Performance tier</span>
+        </div>
+      </div>
+    </div>
+
+    ${section('📋','Accountability Metrics', overviewHTML, true)}
+    ${section('📊','CAPE Proficiency by Student Group', capeHTML)}
+    ${section('📈','OSSE Growth to Proficiency by Student Group', osseHTML)}
+    ${section('⚖️','Equity Gap — All Students vs Economically Disadvantaged', ()=>equitySection(s.equity))}
+    ${section('⚖️','Discipline & School Climate', disciplineHTML)}
+  `;
+
+  document.getElementById('profile').innerHTML = html;
+  document.getElementById('profile').classList.add('visible');
+  document.getElementById('search-hero').style.display='none';
+}
+
+function resetSearch(){
+  document.getElementById('profile').classList.remove('visible');
+  document.getElementById('profile').innerHTML='';
+  document.getElementById('search-hero').style.display='block';
+  document.getElementById('school-search').value='';
+  document.getElementById('school-search').focus();
+}
+
+// ── Search ────────────────────────────────────────────────────────────────────
+const searchInput = document.getElementById('school-search');
+const dropdown = document.getElementById('search-dropdown');
+let kbdIdx = -1;
+let currentMatches = [];
+
+function renderDropdown(matches){
+  currentMatches = matches;
+  kbdIdx = -1;
+  if(!matches.length){ dropdown.style.display='none'; return; }
+  dropdown.innerHTML = matches.map((s,i)=>`
+    <div class="search-opt" data-i="${i}">
+      <span class="search-opt-name">${s.name}</span>
+      <span class="search-opt-meta">${s.type} · ${s.fw} · ${s.ward?'Ward '+s.ward+' · ':''}Score ${s.score.toFixed(1)}</span>
+    </div>`).join('');
+  dropdown.style.display='block';
+  dropdown.querySelectorAll('.search-opt').forEach(el=>{
+    el.addEventListener('mousedown', e=>{ e.preventDefault(); selectSchool(currentMatches[parseInt(el.dataset.i)]); });
+  });
+}
+
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  if(q.length < 1){ dropdown.style.display='none'; return; }
+  const matches = PROFILES.filter(s=>s.name.toLowerCase().includes(q)).slice(0,10);
+  renderDropdown(matches);
+});
+
+searchInput.addEventListener('keydown', e=>{
+  const opts = dropdown.querySelectorAll('.search-opt');
+  if(!opts.length) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); kbdIdx=Math.min(kbdIdx+1,opts.length-1); opts.forEach((o,i)=>o.classList.toggle('kbd-focus',i===kbdIdx)); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); kbdIdx=Math.max(kbdIdx-1,0); opts.forEach((o,i)=>o.classList.toggle('kbd-focus',i===kbdIdx)); }
+  else if(e.key==='Enter'){ e.preventDefault(); if(kbdIdx>=0&&currentMatches[kbdIdx]) selectSchool(currentMatches[kbdIdx]); }
+  else if(e.key==='Escape'){ dropdown.style.display='none'; }
+});
+
+document.addEventListener('click', e=>{ if(!e.target.closest('.search-wrap')) dropdown.style.display='none'; });
+
+function selectSchool(s){
+  dropdown.style.display='none';
+  searchInput.value='';
+  buildProfile(s);
+}
+
+searchInput.focus();
+</script>
+</body>
+</html>
